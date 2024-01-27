@@ -182,6 +182,7 @@ export const App: FunctionComponent<{
       inputElement.multiple = true;
 
       inputElement.addEventListener("change", async () => {
+        const importDate = new Date();
         const photoNames = album.map((photo) => photo.name);
 
         const promises = [];
@@ -198,7 +199,7 @@ export const App: FunctionComponent<{
               if (!exif) {
                 return;
               }
-              const { latitude, longitude } = exif;
+              const { latitude, longitude, originalDate } = exif;
 
               try {
                 const { resizedDataURL, resizedBlob } = await resize(file);
@@ -207,6 +208,8 @@ export const App: FunctionComponent<{
                   blob: resizedBlob,
                   latitude,
                   longitude,
+                  originalDate,
+                  importDate,
                   labels:
                     openai && (await label({ openai, url: resizedDataURL })),
                 };
@@ -226,12 +229,6 @@ export const App: FunctionComponent<{
                 });
                 album = [...album, photo];
 
-                if (!(appendedFileCount % 300)) {
-                  map.setView(L.latLng(latitude, longitude), 16, {
-                    animate: false,
-                    duration: 0,
-                  });
-                }
                 appendedFileCount++;
               } catch (exception) {
                 // 効いてないかも?
@@ -247,6 +244,7 @@ export const App: FunctionComponent<{
         }
         await Promise.all(promises);
 
+        await redraw();
         if (appendedFileCount) {
           alert(`${appendedFileCount}枚のEXIF付き写真を取り込みました。`);
         } else {

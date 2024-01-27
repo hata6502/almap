@@ -8,7 +8,12 @@
       http-equiv="Content-Security-Policy"
       content="
         default-src 'self';
-        connect-src 'self' https://api.openai.com https://nominatim.openstreetmap.org https://tile.openstreetmap.jp;
+        connect-src
+          'self'
+          https://api.openai.com
+          https://tile.openstreetmap.jp
+          https://nominatim.openstreetmap.org
+        ;
         img-src 'self' data:;
         style-src-elem 'self' https://cdn.jsdelivr.net https://unpkg.com;
       "

@@ -93,11 +93,17 @@ export const readEXIF = async (file: File) => {
       piexif.GPSHelper.dmsRationalToDeg(
         exif["GPS"][piexif.GPSIFD.GPSLongitude]
       );
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude)) {
-      throw new Error();
+    const match = (exif["Exif"][piexif.ExifIFD.DateTimeOriginal] ?? "").match(
+      /(\d\d\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/
+    );
+    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !match) {
+      throw new Error("Failed to read EXIF");
     }
 
-    return { latitude, longitude };
+    const originalDate = new Date(
+      `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}Z`
+    );
+    return { latitude, longitude, originalDate };
   } catch {
     return;
   }

@@ -7,6 +7,8 @@ export interface Photo {
   blob: Blob;
   latitude: number;
   longitude: number;
+  originalDate: Date;
+  importDate: Date;
   labels?: string[];
 }
 
