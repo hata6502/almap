@@ -20,6 +20,16 @@ import { Photo } from "./";
 import { label, readEXIF, resize } from "./import";
 import { boundaries, drawTile, tileSize } from "./tile";
 
+const openai =
+  // @ts-expect-error
+  typeof window.OPENAI_API_KEY === "string"
+    ? new OpenAI({
+        // @ts-expect-error
+        apiKey: window.OPENAI_API_KEY,
+        dangerouslyAllowBrowser: true,
+      })
+    : undefined;
+
 export const App: FunctionComponent<{
   initialAlbum: Photo[];
   almapDB: IDBDatabase;
@@ -125,43 +135,45 @@ export const App: FunctionComponent<{
       }
     };
 
-    // @ts-expect-error
-    L.Control.geocoder({
-      collapsed: false,
-      defaultMarkGeocode: false,
-      placeholder:
-        initialAlbum
-          .flatMap((photo) => (photo.labels ?? []).slice(0, 1))
-          .sort(() => Math.random() - 0.5)
-          .at(0) ?? "",
-      query: new URLSearchParams(location.search).get("query"),
-      showUniqueResult: false,
-    })
+    if (openai) {
       // @ts-expect-error
-      .on("startgeocode", async function (event) {
-        query = event.input;
-        await redraw();
+      L.Control.geocoder({
+        collapsed: false,
+        defaultMarkGeocode: false,
+        placeholder:
+          initialAlbum
+            .flatMap((photo) => (photo.labels ?? []).slice(0, 1))
+            .sort(() => Math.random() - 0.5)
+            .at(0) ?? "",
+        query: new URLSearchParams(location.search).get("query"),
+        showUniqueResult: false,
       })
-      // @ts-expect-error
-      .on("markgeocode", async function (event) {
-        L.marker(event.geocode.center)
-          .on("click", () => {
-            open(
-              `https://www.google.com/maps/search/?${new URLSearchParams({
-                api: "1",
-                query: `${event.geocode.center.lat},${event.geocode.center.lng}`,
-              })}`
-            );
-          })
-          .addTo(map);
-        map.fitBounds(event.geocode.bbox, { maxZoom: 16 });
-
         // @ts-expect-error
-        this.setQuery("");
-        query = "";
-        await redraw();
-      })
-      .addTo(map);
+        .on("startgeocode", async function (event) {
+          query = event.input;
+          await redraw();
+        })
+        // @ts-expect-error
+        .on("markgeocode", async function (event) {
+          L.marker(event.geocode.center)
+            .on("click", () => {
+              open(
+                `https://www.google.com/maps/search/?${new URLSearchParams({
+                  api: "1",
+                  query: `${event.geocode.center.lat},${event.geocode.center.lng}`,
+                })}`
+              );
+            })
+            .addTo(map);
+          map.fitBounds(event.geocode.bbox, { maxZoom: 16 });
+
+          // @ts-expect-error
+          this.setQuery("");
+          query = "";
+          await redraw();
+        })
+        .addTo(map);
+    }
 
     setImportAlbum(() => () => {
       const inputElement = document.createElement("input");
@@ -170,15 +182,6 @@ export const App: FunctionComponent<{
       inputElement.multiple = true;
 
       inputElement.addEventListener("change", async () => {
-        const openai =
-          // @ts-expect-error
-          typeof window.OPENAI_API_KEY === "string"
-            ? new OpenAI({
-                // @ts-expect-error
-                apiKey: window.OPENAI_API_KEY,
-                dangerouslyAllowBrowser: true,
-              })
-            : undefined;
         const photoNames = album.map((photo) => photo.name);
 
         const promises = [];
