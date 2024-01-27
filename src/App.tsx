@@ -100,7 +100,7 @@ export const App: FunctionComponent<{
     const AlmapLayer = L.GridLayer.extend({
       options: {
         attribution:
-          '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>',
+          '<a href="https://www.openmaptiles.org/" target="_blank">&copy; OpenMapTiles</a> <a href="https://www.openstreetmap.org/copyright" target="_blank">&copy; OpenStreetMap contributors</a>',
         maxZoom: 22,
       },
       createTile,
