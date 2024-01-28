@@ -1,5 +1,5 @@
 import L from "leaflet";
-import { Photo } from "./";
+import { Photo } from "./database";
 
 export const boundaries = 3;
 export const tileSize = 256;
@@ -175,7 +175,7 @@ const searchPhotoInBoundary = ({
     }
   }
 
-  const albumThumbnailnessEntries = albumInBoundary
+  const sortedAlbum = albumInBoundary
     .map(
       (photo) =>
         [
@@ -187,10 +187,15 @@ const searchPhotoInBoundary = ({
           ),
         ] as const
     )
-    .sort(
-      ([, thumbnailnessA], [, thumbnailnessB]) =>
-        thumbnailnessB - thumbnailnessA
-    );
+    .toSorted(([photoA, thumbnailnessA], [photoB, thumbnailnessB]) => {
+      const thumbnailnessDiff = thumbnailnessB - thumbnailnessA;
+      if (thumbnailnessDiff) {
+        return thumbnailnessDiff;
+      }
 
-  return albumThumbnailnessEntries.map(([photo]) => photo);
+      return photoB.originalDate.getTime() - photoA.originalDate.getTime();
+    })
+    .map(([photo]) => photo);
+
+  return sortedAlbum;
 };

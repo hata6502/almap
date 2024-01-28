@@ -96,7 +96,14 @@ export const readEXIF = async (file: File) => {
     const match = (exif["Exif"][piexif.ExifIFD.DateTimeOriginal] ?? "").match(
       /(\d\d\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/
     );
-    if (!Number.isFinite(latitude) || !Number.isFinite(longitude) || !match) {
+    if (
+      !Number.isFinite(latitude) ||
+      !Number.isFinite(longitude) ||
+      // 緯度経度が0の場合は、EXIFが読めていないとみなす。
+      !latitude ||
+      !longitude ||
+      !match
+    ) {
       throw new Error("Failed to read EXIF");
     }
 
