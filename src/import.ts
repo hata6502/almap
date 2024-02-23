@@ -65,7 +65,7 @@ export const label = async ({
   return [...coreLabels, ...synonyms];
 };
 
-export const readEXIF = async (file: File) => {
+export const readEXIF = async (blob: Blob) => {
   try {
     const appendedDataURL = await new Promise<string>((resolve, reject) => {
       const fileReader = new FileReader();
@@ -81,7 +81,7 @@ export const readEXIF = async (file: File) => {
         reject(fileReader.error);
       };
 
-      fileReader.readAsDataURL(file);
+      fileReader.readAsDataURL(blob);
     });
     const exif = piexif.load(appendedDataURL);
 
@@ -116,8 +116,8 @@ export const readEXIF = async (file: File) => {
   }
 };
 
-export const resize = async (file: File) => {
-  const imageBitmap = await createImageBitmap(file);
+export const resize = async (blob: Blob) => {
+  const imageBitmap = await createImageBitmap(blob);
   const resizeRatio = 512 / Math.max(imageBitmap.width, imageBitmap.height);
   const canvasElement = document.createElement("canvas");
   canvasElement.width = imageBitmap.width * resizeRatio;
