@@ -1,9 +1,12 @@
+import { Almap } from "./Almap";
+import { Calendar } from "./Calendar";
+import { Photo, getAlbum, putPhoto } from "./database";
+import { label, readEXIF, resize } from "./import";
+
 import { Dialog, Popover, Transition } from "@headlessui/react";
 import {
   Bars3Icon,
   ChevronDownIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
   PhotoIcon,
 } from "@heroicons/react/20/solid";
 import clsx from "clsx";
@@ -18,9 +21,6 @@ import {
   useMemo,
   useState,
 } from "react";
-import { Almap } from "./Almap";
-import { Photo, getAlbum, putPhoto } from "./database";
-import { label, readEXIF, resize } from "./import";
 
 const openai =
   // @ts-expect-error
@@ -249,7 +249,11 @@ export const App: FunctionComponent<{
       </Transition.Root>
 
       <div className="relative h-full">
-        <Almap album={filteredAlbum} searchBarDisplay={Boolean(openai)} />
+        <Almap
+          album={filteredAlbum}
+          displaysSearchBar={Boolean(openai)}
+          importFilterEnabled={importFilterEnabled}
+        />
 
         <button
           type="button"
@@ -277,53 +281,8 @@ export const App: FunctionComponent<{
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
           >
-            <Popover.Panel className="absolute left-1/2 z-10 mt-2 w-56 -translate-x-1/2 transform rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-              <div className="flex items-center text-gray-900">
-                <button
-                  type="button"
-                  className="-m-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
-                >
-                  <span className="sr-only">Previous month</span>
-                  <ChevronLeftIcon className="h-5 w-5" aria-hidden="true" />
-                </button>
-                <div className="flex-auto text-sm font-semibold">January</div>
-                <button
-                  type="button"
-                  className="-m-1.5 flex flex-none items-center justify-center p-1.5 text-gray-400 hover:text-gray-500"
-                >
-                  <span className="sr-only">Next month</span>
-                  <ChevronRightIcon className="h-5 w-5" aria-hidden="true" />
-                </button>
-              </div>
-              <div className="mt-6 grid grid-cols-7 text-xs leading-6 text-gray-500">
-                <div>M</div>
-                <div>T</div>
-                <div>W</div>
-                <div>T</div>
-                <div>F</div>
-                <div>S</div>
-                <div>S</div>
-              </div>
-              <div className="isolate mt-2 grid grid-cols-7 gap-px rounded-lg bg-gray-200 text-sm shadow ring-1 ring-gray-200">
-                {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((day) => (
-                  <button
-                    key={day}
-                    type="button"
-                    className="py-1.5 hover:bg-gray-100 focus:z-10 bg-white text-gray-900"
-                    //dayIdx === 0 && "rounded-tl-lg",
-                    //dayIdx === 6 && "rounded-tr-lg",
-                    //dayIdx === days.length - 7 && "rounded-bl-lg",
-                    //dayIdx === days.length - 1 && "rounded-br-lg"
-                  >
-                    <time
-                      dateTime={String(day)}
-                      className="mx-auto flex h-7 w-7 items-center justify-center rounded-full"
-                    >
-                      {day}
-                    </time>
-                  </button>
-                ))}
-              </div>
+            <Popover.Panel className="absolute left-1/2 z-10 m-2 w-72 -translate-x-1/2 transform rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+              <Calendar />
             </Popover.Panel>
           </Transition>
         </Popover>

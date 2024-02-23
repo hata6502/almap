@@ -11,8 +11,9 @@ import { boundaries, drawTile, tileSize } from "./tile";
 
 export const Almap: FunctionComponent<{
   album: Photo[];
-  searchBarDisplay: boolean;
-}> = ({ album, searchBarDisplay }) => {
+  displaysSearchBar: boolean;
+  importFilterEnabled: boolean;
+}> = ({ album, displaysSearchBar, importFilterEnabled }) => {
   const albumRef = useRef(album);
   const loadedTilesRef = useRef<HTMLCanvasElement[]>([]);
   const mapRef = useRef<L.Map>();
@@ -40,12 +41,14 @@ export const Almap: FunctionComponent<{
     if (!mapRef.current) {
       return;
     }
-    mapRef.current.fitBounds(
-      L.latLngBounds(
-        album.map((photo) => L.latLng(photo.latitude, photo.longitude))
-      )
-    );
-    void redraw();
+    if (importFilterEnabled) {
+      mapRef.current.fitBounds(
+        L.latLngBounds(
+          album.map((photo) => L.latLng(photo.latitude, photo.longitude))
+        )
+      );
+    }
+    redraw();
   }, [album, redraw]);
 
   useEffect(() => {
@@ -143,7 +146,7 @@ export const Almap: FunctionComponent<{
       })
       .addTo(map);
 
-    if (searchBarDisplay) {
+    if (displaysSearchBar) {
       // @ts-expect-error
       L.Control.geocoder({
         collapsed: false,
@@ -186,7 +189,7 @@ export const Almap: FunctionComponent<{
       map.remove();
       mapRef.current = undefined;
     };
-  }, [redraw, searchBarDisplay]);
+  }, [redraw, displaysSearchBar]);
 
   return <div id={id} className="h-full" />;
 };
