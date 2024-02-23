@@ -49,97 +49,75 @@ export const App: FunctionComponent<{
     setSidebarOpen(false);
   };
 
-  const handleImportButtonClick = async () => {
-    const gyazoListResponse = await fetch(
-      `https://api.gyazo.com/api/images?${new URLSearchParams({
-        access_token: "",
-        page: "2",
-        per_page: "100",
-      })}`
-    );
-    if (!gyazoListResponse.ok) {
-      throw new Error("Failed to get gyazo list");
-    }
-    const gyazoList = await gyazoListResponse.json();
-    // @ts-expect-error
-    const jpegGyazoList = gyazoList.filter((gyazo) => gyazo.type === "jpg");
+  const handleImportButtonClick = () => {
+    const inputElement = document.createElement("input");
+    inputElement.type = "file";
+    inputElement.accept = "image/jpeg";
+    inputElement.multiple = true;
 
-    const importDate = new Date();
-    const photoNames = album.map((photo) => photo.name);
+    inputElement.addEventListener("change", async () => {
+      const importDate = new Date();
+      const photoNames = album.map((photo) => photo.name);
 
-    const promises = [];
-    const queue = new PQueue({ concurrency: 16 });
-    let appendedFileCount = 0;
-    for (const gyazo of jpegGyazoList) {
-      if (photoNames.includes(gyazo.image_id)) {
-        continue;
-      }
+      const promises = [];
+      const queue = new PQueue({ concurrency: 16 });
+      let appendedFileCount = 0;
+      for (const file of inputElement.files ?? []) {
+        if (photoNames.includes(file.name)) {
+          continue;
+        }
 
-      promises.push(
-        queue.add(async () => {
-          try {
-            const gyazoResponse = await fetch(
-              `https://api.gyazo.com/api/images/${encodeURIComponent(
-                gyazo.image_id
-              )}?${new URLSearchParams({
-                access_token: "",
-              })}`
-            );
-            if (!gyazoResponse.ok) {
-              throw new Error("Failed to get gyazo list");
-            }
-            console.log(await gyazoResponse.json());
-
-            /*const blobResponse = await fetch(gyazo.url);
-            if (!blobResponse.ok) {
-              throw new Error("Failed to get blob");
-            }
-            const blob = await blobResponse.blob();*/
-
-            const exif = await readEXIF(blob);
+        promises.push(
+          queue.add(async () => {
+            const exif = await readEXIF(file);
             if (!exif) {
               return;
             }
             const { latitude, longitude, originalDate } = exif;
 
-            const { resizedDataURL, resizedBlob } = await resize(blob);
-            const photo: Photo = {
-              name: gyazo.image_id,
-              blob: resizedBlob,
-              latitude,
-              longitude,
-              originalDate,
-              importDate,
-              labels: openai && (await label({ openai, url: resizedDataURL })),
-            };
-            console.log(photo);
-            await putPhoto(photo);
+            try {
+              const { resizedDataURL, resizedBlob } = await resize(file);
+              const photo: Photo = {
+                name: file.name,
+                blob: resizedBlob,
+                latitude,
+                longitude,
+                originalDate,
+                importDate,
+                labels:
+                  openai && (await label({ openai, url: resizedDataURL })),
+              };
+              console.log(photo);
+              await putPhoto(photo);
 
-            appendedFileCount++;
-          } catch (exception) {
-            // 効いてないかも?
-            if (exception instanceof OpenAI.RateLimitError) {
-              alert(exception);
-              throw exception;
+              appendedFileCount++;
+            } catch (exception) {
+              // 効いてないかも?
+              if (exception instanceof OpenAI.RateLimitError) {
+                alert(exception);
+                throw exception;
+              }
+
+              console.error(file.name, exception);
             }
+          })
+        );
+      }
+      await Promise.all(promises);
 
-            console.error(gyazo.image_id, exception);
-          }
-        })
-      );
-    }
-    await Promise.all(promises);
+      if (appendedFileCount) {
+        alert(`${appendedFileCount}枚のEXIF付き写真を取り込みました。`);
+        setAlbum(await getAlbum());
+        setSelectedImportTimes(new Set([importDate.getTime()]));
+      } else {
+        alert("EXIF付き写真が見つかりませんでした。");
+        open(
+          "https://scrapbox.io/hata6502/EXIF%E4%BB%98%E3%81%8D%E5%86%99%E7%9C%9F%E3%82%92%E5%85%A8%E9%81%B8%E6%8A%9E%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95"
+        );
+      }
+    });
 
-    if (appendedFileCount) {
-      alert(`${appendedFileCount}枚のEXIF付き写真を取り込みました。`);
-      setAlbum(await getAlbum());
-      setSelectedImportTimes(new Set([importDate.getTime()]));
-    } else {
-      alert("EXIF付き写真が見つかりませんでした。");
-      open(
-        "https://scrapbox.io/hata6502/EXIF%E4%BB%98%E3%81%8D%E5%86%99%E7%9C%9F%E3%82%92%E5%85%A8%E9%81%B8%E6%8A%9E%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95"
-      );
-    }
+    inputElement.click();
   };
 
   const importID = useId();
