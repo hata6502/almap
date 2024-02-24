@@ -134,8 +134,10 @@ export const App: FunctionComponent<{
     const [startDate, endDate] = dateRange;
     return album.filter(
       (photo) =>
-        photo.originalDate.getTime() >= startDate.getTime() &&
-        photo.originalDate.getTime() <= endDate.getTime() &&
+        new Date(photo.originalDate).setHours(0, 0, 0, 0) >=
+          startDate.getTime() &&
+        new Date(photo.originalDate).setHours(0, 0, 0, 0) <=
+          endDate.getTime() &&
         (!importFilterEnabled ||
           selectedImportTimes.has(photo.importDate.getTime()))
     );
@@ -286,9 +288,17 @@ export const App: FunctionComponent<{
             leave="transition ease-in duration-75"
             leaveFrom="transform opacity-100 scale-100"
             leaveTo="transform opacity-0 scale-95"
+            unmount={false}
           >
-            <Popover.Panel className="absolute left-1/2 z-10 m-2 w-72 -translate-x-1/2 transform rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-              <Calendar dateRange={dateRange} setDateRange={setDateRange} />
+            <Popover.Panel
+              unmount={false}
+              className="absolute left-1/2 z-10 m-2 w-72 -translate-x-1/2 transform rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+            >
+              <Calendar
+                album={album}
+                dateRange={dateRange}
+                setDateRange={setDateRange}
+              />
             </Popover.Panel>
           </Transition>
         </Popover>

@@ -1,14 +1,20 @@
+import { Photo } from "./database";
+
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
 import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
 
 export const Calendar: FunctionComponent<{
+  album: Photo[];
   dateRange: [Date, Date];
   setDateRange: Dispatch<SetStateAction<[Date, Date]>>;
-}> = ({ dateRange: [start, end], setDateRange }) => {
+}> = ({ album, dateRange: [start, end], setDateRange }) => {
   const [dateOfMonth, setDateOfMonth] = useState(new Date());
 
   const days = getDaysOfMonth(dateOfMonth);
+  const heatmap = Map.groupBy(album, (photo) =>
+    new Date(photo.originalDate).setHours(0, 0, 0, 0)
+  );
 
   const handlePrevMonthButtonClick = () => {
     setDateOfMonth((current) => {
@@ -84,12 +90,28 @@ export const Calendar: FunctionComponent<{
           const selected =
             day.getTime() >= start.getTime() &&
             day.getTime() <= end.getTime() &&
-            (start.getTime() !== new Date(-8640000000000000).getTime() ||
-              end.getTime() !== new Date(8640000000000000).getTime());
+            (start.getTime() !== -8640000000000000 ||
+              end.getTime() !== 8640000000000000);
           const edge = [start.getTime(), end.getTime()].includes(day.getTime());
-          const today =
-            new Date(day).setHours(0, 0, 0, 0) ===
-            new Date().setHours(0, 0, 0, 0);
+          const today = day.getTime() === new Date().setHours(0, 0, 0, 0);
+
+          const heat = heatmap.get(day.getTime()) ?? [];
+          const lightness = 100 - 5.29411764706 * Math.min(heat.length / 5, 1);
+          const hue =
+            360 *
+            ((Math.hypot(
+              heat.reduce((sum, photo) => sum + photo.latitude, 0) /
+                heat.length /
+                // 緯度1度あたりの距離
+                0.0090133729745762,
+              heat.reduce((sum, photo) => sum + photo.longitude, 0) /
+                heat.length /
+                // 経度1度あたりの距離
+                0.010966404715491394
+            ) /
+              // マラソンの距離
+              42.195) %
+              1);
 
           const handleClick = () => {
             setDateRange(([currentStart, currentEnd]) => {
@@ -119,8 +141,7 @@ export const Calendar: FunctionComponent<{
               key={day.toISOString()}
               type="button"
               className={clsx(
-                "py-1.5 border-t border-gray-200 hover:bg-gray-100 focus:z-10",
-                dayIndex % 7 > 0 && "border-l",
+                "py-1.5 border-t border-gray-200 focus:z-10",
                 dayIndex === days.length - 7 && "rounded-bl-md",
                 dayIndex === days.length - 1 && "rounded-br-md",
                 currentMonth
@@ -129,6 +150,10 @@ export const Calendar: FunctionComponent<{
                 selected && "font-semibold",
                 today && "font-bold"
               )}
+              style={{
+                // bg-pink-100を基準に計算
+                background: `hsl(${hue} 77.77777777777784% ${lightness}%)`,
+              }}
               onClick={handleClick}
             >
               <time
