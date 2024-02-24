@@ -4,6 +4,11 @@ import { FunctionComponent, useState } from "react";
 
 export const Calendar: FunctionComponent = () => {
   const [dateOfMonth, setDateOfMonth] = useState(new Date());
+  const [[start, end], setRange] = useState<[Date, Date]>([
+    new Date(-8640000000000000),
+    new Date(8640000000000000),
+  ]);
+
   const days = getDaysOfMonth(dateOfMonth);
 
   const handlePrevMonthButtonClick = () => {
@@ -35,7 +40,7 @@ export const Calendar: FunctionComponent = () => {
 
   return (
     <>
-      <div className="flex items-center justify-between text-gray-900">
+      <div className="flex items-center justify-between">
         <button
           type="button"
           className="flex items-center justify-center p-3 text-gray-400 hover:text-gray-500"
@@ -77,9 +82,37 @@ export const Calendar: FunctionComponent = () => {
       <div className="isolate mt-2 grid grid-cols-7 text-sm">
         {days.map((day, dayIndex) => {
           const currentMonth = day.getMonth() === dateOfMonth.getMonth();
+          const selected =
+            day.getTime() >= start.getTime() &&
+            day.getTime() <= end.getTime() &&
+            (start.getTime() !== new Date(-8640000000000000).getTime() ||
+              end.getTime() !== new Date(8640000000000000).getTime());
           const today =
             new Date(day).setHours(0, 0, 0, 0) ===
             new Date().setHours(0, 0, 0, 0);
+
+          const handleClick = () => {
+            setRange(([currentStart, currentEnd]) => {
+              const clickedStart = day.getTime() === currentStart.getTime();
+              const clickedEnd = day.getTime() === currentEnd.getTime();
+              if (clickedStart || clickedEnd) {
+                return [
+                  clickedStart ? new Date(-8640000000000000) : currentStart,
+                  clickedEnd ? new Date(8640000000000000) : currentEnd,
+                ];
+              }
+
+              if (currentStart.getTime() !== currentEnd.getTime()) {
+                return [day, day];
+              }
+
+              const times = [currentStart, day].map((date) => date.getTime());
+              return [
+                new Date(Math.min(...times)),
+                new Date(Math.max(...times)),
+              ];
+            });
+          };
 
           return (
             <button
@@ -93,12 +126,17 @@ export const Calendar: FunctionComponent = () => {
                 currentMonth
                   ? "bg-white text-gray-900"
                   : "bg-gray-50 text-gray-400",
-                today && "font-semibold text-indigo-600"
+                (selected || today) && "font-semibold text-gray-900",
+                today && "text-indigo-600"
               )}
+              onClick={handleClick}
             >
               <time
                 dateTime={day.toISOString()}
-                className="mx-auto flex h-7 w-7 items-center justify-center rounded-full"
+                className={clsx(
+                  "mx-auto flex h-7 w-7 items-center justify-center rounded-full",
+                  selected && "bg-gray-200"
+                )}
               >
                 {day.getDate()}
               </time>
