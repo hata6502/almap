@@ -1,13 +1,12 @@
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import { FunctionComponent, useState } from "react";
+import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
 
-export const Calendar: FunctionComponent = () => {
+export const Calendar: FunctionComponent<{
+  dateRange: [Date, Date];
+  setDateRange: Dispatch<SetStateAction<[Date, Date]>>;
+}> = ({ dateRange: [start, end], setDateRange }) => {
   const [dateOfMonth, setDateOfMonth] = useState(new Date());
-  const [[start, end], setRange] = useState<[Date, Date]>([
-    new Date(-8640000000000000),
-    new Date(8640000000000000),
-  ]);
 
   const days = getDaysOfMonth(dateOfMonth);
 
@@ -87,12 +86,13 @@ export const Calendar: FunctionComponent = () => {
             day.getTime() <= end.getTime() &&
             (start.getTime() !== new Date(-8640000000000000).getTime() ||
               end.getTime() !== new Date(8640000000000000).getTime());
+          const edge = [start.getTime(), end.getTime()].includes(day.getTime());
           const today =
             new Date(day).setHours(0, 0, 0, 0) ===
             new Date().setHours(0, 0, 0, 0);
 
           const handleClick = () => {
-            setRange(([currentStart, currentEnd]) => {
+            setDateRange(([currentStart, currentEnd]) => {
               const clickedStart = day.getTime() === currentStart.getTime();
               const clickedEnd = day.getTime() === currentEnd.getTime();
               if (clickedStart || clickedEnd) {
@@ -126,8 +126,8 @@ export const Calendar: FunctionComponent = () => {
                 currentMonth
                   ? "bg-white text-gray-900"
                   : "bg-gray-50 text-gray-400",
-                (selected || today) && "font-semibold text-gray-900",
-                today && "text-indigo-600"
+                selected && "font-semibold",
+                today && "font-bold"
               )}
               onClick={handleClick}
             >
@@ -135,7 +135,8 @@ export const Calendar: FunctionComponent = () => {
                 dateTime={day.toISOString()}
                 className={clsx(
                   "mx-auto flex h-7 w-7 items-center justify-center rounded-full",
-                  selected && "bg-gray-200"
+                  selected && "bg-gray-200",
+                  edge && "bg-indigo-200"
                 )}
               >
                 {day.getDate()}

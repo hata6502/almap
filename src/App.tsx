@@ -36,11 +36,14 @@ export const App: FunctionComponent<{
   defaultAlbum: Photo[];
 }> = ({ defaultAlbum }) => {
   const [album, setAlbum] = useState(defaultAlbum);
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
+  const [dateRange, setDateRange] = useState<[Date, Date]>([
+    new Date(-8640000000000000),
+    new Date(8640000000000000),
+  ]);
   const [selectedImportTimes, setSelectedImportTimes] = useState<Set<number>>(
     new Set()
   );
+  const [sidebarOpen, setSidebarOpen] = useState(false);
 
   const handleBar3ButtonClick = () => {
     setSidebarOpen(true);
@@ -108,6 +111,7 @@ export const App: FunctionComponent<{
       if (appendedFileCount) {
         alert(`${appendedFileCount}枚のEXIF付き写真を取り込みました。`);
         setAlbum(await getAlbum());
+        setDateRange([new Date(-8640000000000000), new Date(8640000000000000)]);
         setSelectedImportTimes(new Set([importDate.getTime()]));
       } else {
         alert("EXIF付き写真が見つかりませんでした。");
@@ -126,15 +130,16 @@ export const App: FunctionComponent<{
   ].toSorted(([aTime], [bTime]) => bTime - aTime);
 
   const importFilterEnabled = Boolean(selectedImportTimes.size);
-  const filteredAlbum = useMemo(
-    () =>
-      album.filter(
-        (photo) =>
-          !importFilterEnabled ||
-          selectedImportTimes.has(photo.importDate.getTime())
-      ),
-    [album, importFilterEnabled, selectedImportTimes]
-  );
+  const filteredAlbum = useMemo(() => {
+    const [startDate, endDate] = dateRange;
+    return album.filter(
+      (photo) =>
+        photo.originalDate.getTime() >= startDate.getTime() &&
+        photo.originalDate.getTime() <= endDate.getTime() &&
+        (!importFilterEnabled ||
+          selectedImportTimes.has(photo.importDate.getTime()))
+    );
+  }, [album, dateRange, importFilterEnabled, selectedImportTimes]);
 
   return (
     <>
@@ -282,7 +287,7 @@ export const App: FunctionComponent<{
             leaveTo="transform opacity-0 scale-95"
           >
             <Popover.Panel className="absolute left-1/2 z-10 m-2 w-72 -translate-x-1/2 transform rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
-              <Calendar />
+              <Calendar dateRange={dateRange} setDateRange={setDateRange} />
             </Popover.Panel>
           </Transition>
         </Popover>

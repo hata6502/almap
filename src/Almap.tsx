@@ -41,7 +41,7 @@ export const Almap: FunctionComponent<{
     if (!mapRef.current) {
       return;
     }
-    if (importFilterEnabled) {
+    if (importFilterEnabled && album.length) {
       mapRef.current.fitBounds(
         L.latLngBounds(
           album.map((photo) => L.latLng(photo.latitude, photo.longitude))
