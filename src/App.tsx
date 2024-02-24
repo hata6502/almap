@@ -140,6 +140,7 @@ export const App: FunctionComponent<{
           selectedImportTimes.has(photo.importDate.getTime()))
     );
   }, [album, dateRange, importFilterEnabled, selectedImportTimes]);
+  const albumFiltered = filteredAlbum.length !== album.length;
 
   return (
     <>
@@ -256,8 +257,8 @@ export const App: FunctionComponent<{
       <div className="relative h-full">
         <Almap
           album={filteredAlbum}
+          albumFiltered={albumFiltered}
           displaysSearchBar={Boolean(openai)}
-          importFilterEnabled={importFilterEnabled}
         />
 
         <button

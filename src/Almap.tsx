@@ -11,9 +11,9 @@ import { boundaries, drawTile, tileSize } from "./tile";
 
 export const Almap: FunctionComponent<{
   album: Photo[];
+  albumFiltered: boolean;
   displaysSearchBar: boolean;
-  importFilterEnabled: boolean;
-}> = ({ album, displaysSearchBar, importFilterEnabled }) => {
+}> = ({ album, albumFiltered, displaysSearchBar }) => {
   const albumRef = useRef(album);
   const loadedTilesRef = useRef<HTMLCanvasElement[]>([]);
   const mapRef = useRef<L.Map>();
@@ -41,7 +41,7 @@ export const Almap: FunctionComponent<{
     if (!mapRef.current) {
       return;
     }
-    if (importFilterEnabled && album.length) {
+    if (albumFiltered && album.length) {
       mapRef.current.fitBounds(
         L.latLngBounds(
           album.map((photo) => L.latLng(photo.latitude, photo.longitude))
