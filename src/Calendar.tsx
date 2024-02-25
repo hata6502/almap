@@ -155,25 +155,22 @@ export const Calendar: FunctionComponent<{
 
 const getBackground = (heat: Photo[]) => {
   const lightness = 100 - 5.29411764706 * Math.min(heat.length / 5, 1);
+
+  const latitude =
+    heat.reduce((sum, photo) => sum + photo.latitude, 0) / heat.length -
+    // 日本経緯度原点
+    35.39291572;
+  const longitude =
+    heat.reduce((sum, photo) => sum + photo.longitude, 0) / heat.length -
+    // 日本経緯度原点
+    139.44288869;
   const hue =
     360 *
     ((Math.hypot(
-      heat.reduce(
-        (sum, photo) => sum + photo.latitude,
-        // 日本経緯度原点
-        -35.39291572
-      ) /
-        heat.length /
-        // 緯度1度あたりの距離
-        0.0090133729745762,
-      heat.reduce(
-        (sum, photo) => sum + photo.longitude,
-        // 日本経緯度原点
-        -139.44288869
-      ) /
-        heat.length /
-        // 経度1度あたりの距離
-        0.010966404715491394
+      // 緯度1度あたりの距離
+      latitude / 0.0090133729745762,
+      // 経度1度あたりの距離
+      longitude / 0.010966404715491394
     ) /
       // マラソンの距離
       42.195 /
