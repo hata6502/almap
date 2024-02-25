@@ -12,12 +12,10 @@ import { boundaries, drawTile, tileSize } from "./tile";
 export const Almap: FunctionComponent<{
   album: Photo[];
   albumFiltered: boolean;
-  displaysSearchBar: boolean;
-}> = ({ album, albumFiltered, displaysSearchBar }) => {
+}> = ({ album, albumFiltered }) => {
   const albumRef = useRef(album);
   const loadedTilesRef = useRef<HTMLCanvasElement[]>([]);
   const mapRef = useRef<L.Map>();
-  const queryRef = useRef("");
   const id = useId();
 
   const redraw = useCallback(async () => {
@@ -30,7 +28,6 @@ export const Almap: FunctionComponent<{
         canvasElement,
         album: albumRef.current,
         map: mapRef.current,
-        query: queryRef.current,
       });
     }
   }, []);
@@ -80,7 +77,6 @@ export const Almap: FunctionComponent<{
             canvasElement,
             album: albumRef.current,
             map,
-            query: queryRef.current,
           });
 
           canvasElement.addEventListener("click", async (event) => {
@@ -136,50 +132,12 @@ export const Almap: FunctionComponent<{
       })
       .addTo(map);
 
-    if (displaysSearchBar) {
-      // @ts-expect-error
-      L.Control.geocoder({
-        collapsed: false,
-        defaultMarkGeocode: false,
-        placeholder:
-          albumRef.current
-            .flatMap((photo) => (photo.labels ?? []).slice(0, 1))
-            .sort(() => Math.random() - 0.5)
-            .at(0) ?? "",
-        query: new URLSearchParams(location.search).get("query"),
-        showUniqueResult: false,
-      })
-        // @ts-expect-error
-        .on("startgeocode", async function (event) {
-          queryRef.current = event.input;
-          await redraw();
-        })
-        // @ts-expect-error
-        .on("markgeocode", async function (event) {
-          L.marker(event.geocode.center)
-            .on("click", () => {
-              open(
-                `https://www.google.com/maps/search/?${new URLSearchParams({
-                  api: "1",
-                  query: `${event.geocode.center.lat},${event.geocode.center.lng}`,
-                })}`
-              );
-            })
-            .addTo(map);
-          map.fitBounds(event.geocode.bbox, { maxZoom: 16 });
-
-          queryRef.current = "";
-          await redraw();
-        })
-        .addTo(map);
-    }
-
     mapRef.current = map;
     return () => {
       map.remove();
       mapRef.current = undefined;
     };
-  }, [redraw, displaysSearchBar]);
+  }, [redraw]);
 
   return <div id={id} className="h-full" />;
 };

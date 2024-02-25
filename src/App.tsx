@@ -1,7 +1,7 @@
 import { Almap } from "./Almap";
 import { Calendar } from "./Calendar";
 import { Photo, getAlbum, putPhoto } from "./database";
-import { label, readEXIF, resize } from "./import";
+import { readEXIF, resize } from "./import";
 
 import { Dialog, Popover, Transition } from "@headlessui/react";
 import {
@@ -10,9 +10,6 @@ import {
   PhotoIcon,
 } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import "leaflet-control-geocoder";
-import OpenAI from "openai";
-import PQueue from "p-queue";
 import {
   ChangeEventHandler,
   Fragment,
@@ -21,16 +18,6 @@ import {
   useMemo,
   useState,
 } from "react";
-
-const openai =
-  // @ts-expect-error
-  typeof window.OPENAI_API_KEY === "string"
-    ? new OpenAI({
-        // @ts-expect-error
-        apiKey: window.OPENAI_API_KEY,
-        dangerouslyAllowBrowser: true,
-      })
-    : undefined;
 
 export const App: FunctionComponent<{
   defaultAlbum: Photo[];
@@ -62,51 +49,31 @@ export const App: FunctionComponent<{
       const importDate = new Date();
       const photoNames = album.map((photo) => photo.name);
 
-      const promises = [];
-      const queue = new PQueue({ concurrency: 16 });
       let appendedFileCount = 0;
       for (const file of inputElement.files ?? []) {
         if (photoNames.includes(file.name)) {
           continue;
         }
+        const exif = await readEXIF(file);
+        if (!exif) {
+          continue;
+        }
 
-        promises.push(
-          queue.add(async () => {
-            const exif = await readEXIF(file);
-            if (!exif) {
-              return;
-            }
-            const { latitude, longitude, originalDate } = exif;
+        const { latitude, longitude, originalDate } = exif;
+        const resizedBlob = await resize(file);
+        const photo: Photo = {
+          name: file.name,
+          blob: resizedBlob,
+          latitude,
+          longitude,
+          originalDate,
+          importDate,
+        };
+        console.log(photo);
+        await putPhoto(photo);
 
-            try {
-              const { resizedDataURL, resizedBlob } = await resize(file);
-              const photo: Photo = {
-                name: file.name,
-                blob: resizedBlob,
-                latitude,
-                longitude,
-                originalDate,
-                importDate,
-                labels:
-                  openai && (await label({ openai, url: resizedDataURL })),
-              };
-              console.log(photo);
-              await putPhoto(photo);
-
-              appendedFileCount++;
-            } catch (exception) {
-              // 効いてないかも?
-              if (exception instanceof OpenAI.RateLimitError) {
-                alert(exception);
-                throw exception;
-              }
-
-              console.error(file.name, exception);
-            }
-          })
-        );
+        appendedFileCount++;
       }
-      await Promise.all(promises);
 
       if (appendedFileCount) {
         alert(`${appendedFileCount}枚のEXIF付き写真を取り込みました。`);
@@ -257,11 +224,7 @@ export const App: FunctionComponent<{
       </Transition.Root>
 
       <div className="relative h-full">
-        <Almap
-          album={filteredAlbum}
-          albumFiltered={albumFiltered}
-          displaysSearchBar={Boolean(openai)}
-        />
+        <Almap album={filteredAlbum} albumFiltered={albumFiltered} />
 
         <button
           type="button"

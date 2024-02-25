@@ -5,7 +5,6 @@ const almapRequests = [
   "./index.js",
   "./manifest.json",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
-  "https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css",
 ];
 const almapCacheName = `almap-${process.env.TIMESTAMP}`;
 const serviceWorker = globalThis as unknown as ServiceWorkerGlobalScope;

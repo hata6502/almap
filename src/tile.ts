@@ -7,12 +7,10 @@ export const drawTile = async ({
   canvasElement,
   album,
   map,
-  query,
 }: {
   canvasElement: HTMLCanvasElement;
   album: Photo[];
   map: L.Map;
-  query: string;
 }) => {
   const bufferCanvasElement = document.createElement("canvas");
   bufferCanvasElement.width = canvasElement.width;
@@ -68,7 +66,6 @@ export const drawTile = async ({
 
           const foundAlbum = searchPhotoInBoundary({
             album,
-            query,
             tileLatLngBounds,
           });
 
@@ -135,67 +132,15 @@ export const drawTile = async ({
   canvasContext.drawImage(bufferCanvasElement, 0, 0);
 };
 
-const normalizeForSearch = (str: string) =>
-  str
-    .toLowerCase()
-    .replace(/[\u30a1-\u30f6]/g, (katakana) =>
-      String.fromCharCode(katakana.charCodeAt(0) - 0x60)
-    );
-
 const searchPhotoInBoundary = ({
   album,
-  query,
   tileLatLngBounds,
 }: {
   album: Photo[];
-  query: string;
   tileLatLngBounds: L.LatLngBounds;
-}) => {
-  const albumInBoundary = album.filter(
-    (photo) =>
-      tileLatLngBounds.contains(L.latLng(photo.latitude, photo.longitude)) &&
-      (!query ||
-        query
-          .split(/\s/)
-          .some((word) =>
-            (photo.labels ?? []).some((label) =>
-              normalizeForSearch(label).includes(normalizeForSearch(word))
-            )
-          ))
-  );
-
-  const labelScores = new Map();
-  for (const photo of albumInBoundary) {
-    for (const label of photo.labels ?? []) {
-      const normalizedLabel = normalizeForSearch(label);
-      labelScores.set(
-        normalizedLabel,
-        (labelScores.get(normalizedLabel) ?? 0) + 1
-      );
-    }
-  }
-
-  const sortedAlbum = albumInBoundary
-    .map(
-      (photo) =>
-        [
-          photo,
-          (photo.labels ?? []).reduce(
-            (thumbnailness, label) =>
-              thumbnailness + labelScores.get(normalizeForSearch(label)),
-            0
-          ),
-        ] as const
+}) =>
+  album
+    .filter((photo) =>
+      tileLatLngBounds.contains(L.latLng(photo.latitude, photo.longitude))
     )
-    .toSorted(([photoA, thumbnailnessA], [photoB, thumbnailnessB]) => {
-      const thumbnailnessDiff = thumbnailnessB - thumbnailnessA;
-      if (thumbnailnessDiff) {
-        return thumbnailnessDiff;
-      }
-
-      return photoB.originalDate.getTime() - photoA.originalDate.getTime();
-    })
-    .map(([photo]) => photo);
-
-  return sortedAlbum;
-};
+    .toSorted((a, b) => b.originalDate.getTime() - a.originalDate.getTime());

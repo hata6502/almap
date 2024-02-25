@@ -5,7 +5,6 @@ export interface Photo {
   longitude: number;
   originalDate: Date;
   importDate: Date;
-  labels?: string[];
 }
 
 export const getAlbum = () =>
