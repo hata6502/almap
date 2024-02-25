@@ -37,7 +37,7 @@ export const Calendar: FunctionComponent<{
       `${dateOfMonth.getFullYear()}/${dateOfMonth.getMonth() + 1}`
     );
     const next = input && new Date(input);
-    if (!next || isNaN(next.getTime())) {
+    if (!next || Number.isNaN(next.getTime())) {
       return;
     }
     setDateOfMonth(next);

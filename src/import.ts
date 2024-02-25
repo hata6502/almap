@@ -29,23 +29,28 @@ export const readEXIF = async (file: File) => {
       piexif.GPSHelper.dmsRationalToDeg(
         exif["GPS"][piexif.GPSIFD.GPSLongitude]
       );
-    const match = (exif["Exif"][piexif.ExifIFD.DateTimeOriginal] ?? "").match(
-      /(\d\d\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/
-    );
+    const dateMatch = (
+      exif["Exif"][piexif.ExifIFD.DateTimeOriginal] ?? ""
+    ).match(/(\d\d\d\d):(\d\d):(\d\d) (\d\d):(\d\d):(\d\d)/);
     if (
       !Number.isFinite(latitude) ||
       !Number.isFinite(longitude) ||
       // 緯度経度が0の場合は、EXIFを読めていないとみなす。
       !latitude ||
       !longitude ||
-      !match
+      !dateMatch
     ) {
       throw new Error("Failed to read EXIF");
     }
 
     const originalDate = new Date(
-      `${match[1]}-${match[2]}-${match[3]}T${match[4]}:${match[5]}:${match[6]}Z`
+      `${dateMatch[1]}-${dateMatch[2]}-${dateMatch[3]}T${dateMatch[4]}:${dateMatch[5]}:${dateMatch[6]}Z`
     );
+    // タイムゾーンを修正
+    originalDate.setMinutes(
+      originalDate.getMinutes() + originalDate.getTimezoneOffset()
+    );
+
     return { latitude, longitude, originalDate };
   } catch {
     return;
