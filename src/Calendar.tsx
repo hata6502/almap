@@ -100,11 +100,19 @@ export const Calendar: FunctionComponent<{
           const hue =
             360 *
             ((Math.hypot(
-              heat.reduce((sum, photo) => sum + photo.latitude, 0) /
+              heat.reduce(
+                (sum, photo) => sum + photo.latitude,
+                // 日本経緯度原点
+                -35.39291572
+              ) /
                 heat.length /
                 // 緯度1度あたりの距離
                 0.0090133729745762,
-              heat.reduce((sum, photo) => sum + photo.longitude, 0) /
+              heat.reduce(
+                (sum, photo) => sum + photo.longitude,
+                // 日本経緯度原点
+                -139.44288869
+              ) /
                 heat.length /
                 // 経度1度あたりの距離
                 0.010966404715491394
@@ -144,9 +152,7 @@ export const Calendar: FunctionComponent<{
                 "py-1.5 border-t border-gray-200 focus:z-10",
                 dayIndex === days.length - 7 && "rounded-bl-md",
                 dayIndex === days.length - 1 && "rounded-br-md",
-                currentMonth
-                  ? "bg-white text-gray-900"
-                  : "bg-gray-50 text-gray-400",
+                currentMonth ? "text-gray-900" : "text-gray-400",
                 selected && "font-semibold",
                 today && "font-bold"
               )}

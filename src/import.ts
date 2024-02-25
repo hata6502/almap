@@ -35,7 +35,7 @@ export const readEXIF = async (file: File) => {
     if (
       !Number.isFinite(latitude) ||
       !Number.isFinite(longitude) ||
-      // 緯度経度が0の場合は、EXIFを読めていないとみなす。
+      // ナル島の場合は、EXIFを読めていないとみなす。
       !latitude ||
       !longitude ||
       !dateMatch
