@@ -95,17 +95,7 @@ export const Almap: FunctionComponent<{
             const thumbnail = boundaryAlbum.at(0);
 
             if (boundaryAlbum.length >= 2) {
-              open(
-                `memory.html?${new URLSearchParams({
-                  album: JSON.stringify(
-                    boundaryAlbum.map((boundaryPhoto: Photo) =>
-                      albumRef.current.findIndex(
-                        (photo: Photo) => photo.name === boundaryPhoto.name
-                      )
-                    )
-                  ),
-                })}`
-              );
+              // TODO: 一覧
             } else if (thumbnail) {
               open(URL.createObjectURL(thumbnail.blob));
             }

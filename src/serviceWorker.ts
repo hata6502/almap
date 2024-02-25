@@ -4,8 +4,6 @@ const almapRequests = [
   "./index.css",
   "./index.js",
   "./manifest.json",
-  "./memory.html",
-  "./memory.js",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
   "https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css",
 ];
