@@ -154,8 +154,6 @@ export const Calendar: FunctionComponent<{
 };
 
 const getBackground = (heat: Photo[]) => {
-  const lightness = 100 - 5.29411764706 * Math.min(heat.length / 5, 1);
-
   const latitude =
     heat.reduce((sum, photo) => sum + photo.latitude, 0) / heat.length -
     // 日本経緯度原点
@@ -176,8 +174,8 @@ const getBackground = (heat: Photo[]) => {
       42.195) %
       1);
 
-  // bg-pink-100を基準に計算
-  return `hsl(${hue} 77.77777777777784% ${lightness}%)`;
+  const lightness = 100 - 7.5 * Math.min(heat.length / 5, 1);
+  return `hsl(${hue} 75% ${lightness}%)`;
 };
 
 const getDaysOfMonth = (dateOfMonth: Date) => {
