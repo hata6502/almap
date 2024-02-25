@@ -137,7 +137,7 @@ export const Almap: FunctionComponent<{
       map.remove();
       mapRef.current = undefined;
     };
-  }, [draw]);
+  }, []);
 
   return <div id={id} className="h-full" />;
 };
