@@ -174,7 +174,7 @@ const getBackground = (heat: Photo[]) => {
       42.195) %
       1);
 
-  const lightness = 100 - 7.5 * Math.min(heat.length / 7.5, 1);
+  const lightness = 100 - 7.5 * Math.min(heat.length / 10, 1);
   return `hsl(${hue} 75% ${lightness}%)`;
 };
 
