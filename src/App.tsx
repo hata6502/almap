@@ -3,21 +3,9 @@ import { Calendar } from "./Calendar";
 import { Photo, getAlbum, putPhoto } from "./database";
 import { readEXIF, resize } from "./import";
 
-import { Dialog, Popover, Transition } from "@headlessui/react";
-import {
-  Bars3Icon,
-  ChevronDownIcon,
-  PhotoIcon,
-} from "@heroicons/react/20/solid";
-import clsx from "clsx";
-import {
-  ChangeEventHandler,
-  Fragment,
-  FunctionComponent,
-  useId,
-  useMemo,
-  useState,
-} from "react";
+import { Popover, Transition } from "@headlessui/react";
+import { CalendarIcon, PhotoIcon } from "@heroicons/react/20/solid";
+import { Fragment, FunctionComponent, useMemo, useState } from "react";
 
 export const App: FunctionComponent<{
   defaultAlbum: Photo[];
@@ -27,17 +15,6 @@ export const App: FunctionComponent<{
     new Date(-8640000000000000),
     new Date(8640000000000000),
   ]);
-  const [selectedImportTimes, setSelectedImportTimes] = useState<Set<number>>(
-    new Set()
-  );
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-
-  const handleBar3ButtonClick = () => {
-    setSidebarOpen(true);
-  };
-  const handleSidebarClose = () => {
-    setSidebarOpen(false);
-  };
 
   const handleImportButtonClick = () => {
     const inputElement = document.createElement("input");
@@ -46,10 +23,9 @@ export const App: FunctionComponent<{
     inputElement.multiple = true;
 
     inputElement.addEventListener("change", async () => {
-      const importDate = new Date();
       const photoNames = album.map((photo) => photo.name);
 
-      let appendedFileCount = 0;
+      const importedPhotos = [];
       for (const file of inputElement.files ?? []) {
         if (photoNames.includes(file.name)) {
           continue;
@@ -67,19 +43,23 @@ export const App: FunctionComponent<{
           latitude,
           longitude,
           originalDate,
-          importDate,
         };
         console.log(photo);
         await putPhoto(photo);
-
-        appendedFileCount++;
+        importedPhotos.push(photo);
       }
 
-      if (appendedFileCount) {
-        alert(`${appendedFileCount}枚のEXIF付き写真を取り込みました。`);
+      if (importedPhotos.length) {
+        alert(`${importedPhotos.length}枚のEXIF付き写真を取り込みました。`);
         setAlbum(await getAlbum());
-        setDateRange([new Date(-8640000000000000), new Date(8640000000000000)]);
-        setSelectedImportTimes(new Set([importDate.getTime()]));
+
+        const importedTimes = importedPhotos.map((photo) =>
+          new Date(photo.originalDate).setHours(0, 0, 0, 0)
+        );
+        setDateRange([
+          new Date(Math.min(...importedTimes)),
+          new Date(Math.max(...importedTimes)),
+        ]);
       } else {
         alert("EXIF付き写真が見つかりませんでした。");
         open(
@@ -91,181 +71,56 @@ export const App: FunctionComponent<{
     inputElement.click();
   };
 
-  const importID = useId();
-  const imports = [
-    ...Map.groupBy(album, (photo) => photo.importDate.getTime()),
-  ].toSorted(([aTime], [bTime]) => bTime - aTime);
-
-  const importFilterEnabled = Boolean(selectedImportTimes.size);
   const filteredAlbum = useMemo(() => {
     const [startDate, endDate] = dateRange;
     return album.filter(
       (photo) =>
         new Date(photo.originalDate).setHours(0, 0, 0, 0) >=
           startDate.getTime() &&
-        new Date(photo.originalDate).setHours(0, 0, 0, 0) <=
-          endDate.getTime() &&
-        (!importFilterEnabled ||
-          selectedImportTimes.has(photo.importDate.getTime()))
+        new Date(photo.originalDate).setHours(0, 0, 0, 0) <= endDate.getTime()
     );
-  }, [album, dateRange, importFilterEnabled, selectedImportTimes]);
+  }, [album, dateRange]);
   const albumFiltered = filteredAlbum.length !== album.length;
 
   return (
-    <>
-      <Transition.Root show={sidebarOpen} as={Fragment}>
-        <Dialog
-          as="div"
-          className="relative z-1000"
-          onClose={handleSidebarClose}
+    <div className="relative h-full">
+      <Almap album={filteredAlbum} albumFiltered={albumFiltered} />
+
+      <button
+        type="button"
+        className="absolute right-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+        onClick={handleImportButtonClick}
+      >
+        <PhotoIcon className="h-5 w-5" aria-hidden="true" />
+      </button>
+
+      <Popover className="absolute right-2 top-2.5 z-1000">
+        <Popover.Button className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+          <CalendarIcon className="h-5 w-5" aria-hidden="true" />
+        </Popover.Button>
+
+        <Transition
+          as={Fragment}
+          enter="transition ease-out duration-100"
+          enterFrom="transform opacity-0 scale-95"
+          enterTo="transform opacity-100 scale-100"
+          leave="transition ease-in duration-75"
+          leaveFrom="transform opacity-100 scale-100"
+          leaveTo="transform opacity-0 scale-95"
+          unmount={false}
         >
-          <div className="fixed inset-0 flex">
-            <Transition.Child
-              as={Fragment}
-              enter="transition ease-in-out duration-300 transform"
-              enterFrom="-translate-x-full"
-              enterTo="translate-x-0"
-              leave="transition ease-in-out duration-300 transform"
-              leaveFrom="translate-x-0"
-              leaveTo="-translate-x-full"
-            >
-              <Dialog.Panel className="relative mr-16 flex w-full max-w-xs flex-1 text-gray-900">
-                <div className="flex grow flex-col gap-y-5 overflow-y-auto bg-white px-6 pt-6 pb-2">
-                  <nav className="flex flex-1 flex-col ">
-                    <ul role="list" className="flex flex-1 flex-col gap-y-7">
-                      <li>
-                        <div className="text-xs text-gray-500 font-semibold leading-6">
-                          取り込み履歴
-                        </div>
-
-                        <ul role="list" className="-mx-2 mt-2 space-y-1">
-                          <li>
-                            <button
-                              type="button"
-                              className="group flex gap-x-3 w-full rounded-md p-2 text-sm leading-6 font-semibold hover:text-indigo-600 hover:bg-gray-50"
-                              onClick={handleImportButtonClick}
-                            >
-                              <PhotoIcon
-                                className="group-hover:text-indigo-600 h-6 w-6 shrink-0"
-                                aria-hidden="true"
-                              />
-                              写真を取り込む
-                            </button>
-                          </li>
-                        </ul>
-
-                        <ul role="list" className="-mx-2 space-y-1">
-                          {imports.map(([key, album]) => {
-                            const handleInputChange: ChangeEventHandler<
-                              HTMLInputElement
-                            > = (event) => {
-                              setSelectedImportTimes((prev) => {
-                                const current = new Set(prev);
-                                if (event.target.checked) {
-                                  current.add(key);
-                                } else {
-                                  current.delete(key);
-                                }
-                                return current;
-                              });
-                            };
-
-                            const id = `${importID}-${key}`;
-                            const inputID = `${id}-input`;
-                            const descriptionID = `${id}-description`;
-                            const label = new Date(key).toLocaleString();
-
-                            return (
-                              <li key={key}>
-                                <label
-                                  htmlFor={inputID}
-                                  className="relative group flex items-start gap-x-3 rounded-md p-2 text-sm leading-6 cursor-pointer hover:text-indigo-600 hover:bg-gray-50"
-                                >
-                                  <div
-                                    className={clsx(
-                                      "flex h-6 px-1 py-1 items-center",
-                                      !importFilterEnabled && "invisible"
-                                    )}
-                                  >
-                                    <input
-                                      id={inputID}
-                                      aria-describedby={descriptionID}
-                                      type="checkbox"
-                                      checked={selectedImportTimes.has(key)}
-                                      className="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-600"
-                                      onChange={handleInputChange}
-                                    />
-                                  </div>
-
-                                  <div className="grow flex text-sm leading-6">
-                                    <span className="grow">{label}</span>
-
-                                    <span
-                                      id={descriptionID}
-                                      className="text-nowrap text-gray-500"
-                                    >
-                                      <span className="sr-only">{label}</span>
-                                      {album.length}枚
-                                    </span>
-                                  </div>
-                                </label>
-                              </li>
-                            );
-                          })}
-                        </ul>
-                      </li>
-                    </ul>
-                  </nav>
-                </div>
-              </Dialog.Panel>
-            </Transition.Child>
-          </div>
-        </Dialog>
-      </Transition.Root>
-
-      <div className="relative h-full">
-        <Almap album={filteredAlbum} albumFiltered={albumFiltered} />
-
-        <button
-          type="button"
-          className="absolute left-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-          onClick={handleBar3ButtonClick}
-        >
-          <Bars3Icon className="h-5 w-5" aria-hidden="true" />
-        </button>
-
-        <Popover className="absolute left-24 top-2.5 z-1000">
-          <Popover.Button className="inline-flex w-full justify-center gap-x-1.5 rounded-md bg-white px-3 py-2 text-sm text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-            日付選択テスト
-            <ChevronDownIcon
-              className="-mr-1 h-5 w-5 text-gray-400"
-              aria-hidden="true"
-            />
-          </Popover.Button>
-
-          <Transition
-            as={Fragment}
-            enter="transition ease-out duration-100"
-            enterFrom="transform opacity-0 scale-95"
-            enterTo="transform opacity-100 scale-100"
-            leave="transition ease-in duration-75"
-            leaveFrom="transform opacity-100 scale-100"
-            leaveTo="transform opacity-0 scale-95"
+          <Popover.Panel
             unmount={false}
+            className="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
           >
-            <Popover.Panel
-              unmount={false}
-              className="absolute left-1/2 z-10 m-2 w-72 -translate-x-1/2 transform rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
-            >
-              <Calendar
-                album={album}
-                dateRange={dateRange}
-                setDateRange={setDateRange}
-              />
-            </Popover.Panel>
-          </Transition>
-        </Popover>
-      </div>
-    </>
+            <Calendar
+              album={album}
+              dateRange={dateRange}
+              setDateRange={setDateRange}
+            />
+          </Popover.Panel>
+        </Transition>
+      </Popover>
+    </div>
   );
 };

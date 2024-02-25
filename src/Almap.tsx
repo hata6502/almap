@@ -18,7 +18,7 @@ export const Almap: FunctionComponent<{
   const mapRef = useRef<L.Map>();
   const id = useId();
 
-  const redraw = useCallback(async () => {
+  const draw = useCallback(async () => {
     for (const canvasElement of loadedTilesRef.current) {
       if (!mapRef.current) {
         return;
@@ -45,8 +45,8 @@ export const Almap: FunctionComponent<{
         )
       );
     }
-    redraw();
-  }, [album, redraw]);
+    draw();
+  }, [album, draw]);
 
   useEffect(() => {
     let isMoving = false;
@@ -137,7 +137,7 @@ export const Almap: FunctionComponent<{
       map.remove();
       mapRef.current = undefined;
     };
-  }, [redraw]);
+  }, [draw]);
 
   return <div id={id} className="h-full" />;
 };

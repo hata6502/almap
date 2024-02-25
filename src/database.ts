@@ -4,7 +4,6 @@ export interface Photo {
   latitude: number;
   longitude: number;
   originalDate: Date;
-  importDate: Date;
 }
 
 export const getAlbum = () =>
