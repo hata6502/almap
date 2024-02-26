@@ -51,7 +51,7 @@ export const Almap: FunctionComponent<{
   useEffect(() => {
     let isMoving = false;
 
-    const map = L.map(id)
+    const map = L.map(id, { zoomControl: false })
       .locate({ setView: true, maxZoom: 13 })
       .on("movestart", () => {
         isMoving = true;
