@@ -57,7 +57,7 @@ export const Calendar: FunctionComponent<{
 
         <button
           type="button"
-          className="rounded bg-indigo-50 px-2 py-1 text-xs text-gray-900 shadow-sm hover:bg-indigo-100"
+          className="rounded bg-pink-50 px-2 py-1 text-xs text-gray-900 shadow-sm hover:bg-pink-100"
           onClick={handleCurrentMonthButtonClick}
         >
           {new Intl.DateTimeFormat([], {
@@ -140,7 +140,7 @@ export const Calendar: FunctionComponent<{
                 className={clsx(
                   "mx-auto flex h-7 w-7 items-center justify-center rounded-full",
                   selected && "bg-gray-200",
-                  edge && "bg-indigo-200"
+                  edge && "bg-pink-200"
                 )}
               >
                 {day.getDate()}
