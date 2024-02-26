@@ -23,9 +23,13 @@ export const App: FunctionComponent<{
     inputElement.multiple = true;
 
     inputElement.addEventListener("change", async () => {
-      const photoNames = album.map((photo) => photo.name);
+      const interval = async () => {
+        setAlbum(await getAlbum());
+      };
+      const intervalID = window.setInterval(interval, 3000);
 
       const importedPhotos = [];
+      const photoNames = album.map((photo) => photo.name);
       for (const file of inputElement.files ?? []) {
         if (photoNames.includes(file.name)) {
           continue;
@@ -49,9 +53,11 @@ export const App: FunctionComponent<{
         importedPhotos.push(photo);
       }
 
+      window.clearInterval(intervalID);
+      await interval();
+
       if (importedPhotos.length) {
         alert(`${importedPhotos.length}枚のEXIF付き写真を取り込みました。`);
-        setAlbum(await getAlbum());
 
         const importedTimes = importedPhotos.map((photo) =>
           new Date(photo.originalDate).setHours(0, 0, 0, 0)
