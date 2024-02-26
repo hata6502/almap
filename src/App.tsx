@@ -5,16 +5,25 @@ import { readEXIF, resize } from "./import";
 
 import { Popover, Transition } from "@headlessui/react";
 import { CalendarIcon, PhotoIcon } from "@heroicons/react/20/solid";
-import { Fragment, FunctionComponent, useMemo, useState } from "react";
+import {
+  Fragment,
+  FunctionComponent,
+  useMemo,
+  useState,
+  useTransition,
+} from "react";
 
 export const App: FunctionComponent<{
   defaultAlbum: Photo[];
 }> = ({ defaultAlbum }) => {
+  const [, startTransition] = useTransition();
+
   const [album, setAlbum] = useState(defaultAlbum);
   const [dateRange, setDateRange] = useState<[Date, Date]>([
     new Date(-8640000000000000),
     new Date(8640000000000000),
   ]);
+  const [progress, setProgress] = useState(0);
 
   const handleImportButtonClick = () => {
     const inputElement = document.createElement("input");
@@ -29,8 +38,15 @@ export const App: FunctionComponent<{
       const intervalID = window.setInterval(interval, 3000);
 
       const importedPhotos = [];
+      const files = inputElement.files ?? [];
       const photoNames = album.map((photo) => photo.name);
-      for (const file of inputElement.files ?? []) {
+      let fileIndex = 0;
+      for (const file of files) {
+        fileIndex++;
+        startTransition(() => {
+          setProgress(fileIndex / files.length);
+        });
+
         if (photoNames.includes(file.name)) {
           continue;
         }
@@ -55,6 +71,7 @@ export const App: FunctionComponent<{
 
       window.clearInterval(intervalID);
       await interval();
+      setProgress(0);
 
       if (importedPhotos.length) {
         alert(`${importedPhotos.length}枚のEXIF付き写真を取り込みました。`);
@@ -127,6 +144,11 @@ export const App: FunctionComponent<{
           </Popover.Panel>
         </Transition>
       </Popover>
+
+      <div
+        className="absolute left-0 top-0 z-1000 h-1 bg-pink-400"
+        style={{ width: `${progress * 100}%` }}
+      />
     </div>
   );
 };
