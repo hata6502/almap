@@ -23,9 +23,12 @@ export const App: FunctionComponent<{
     new Date(-8640000000000000),
     new Date(8640000000000000),
   ]);
-  const [progress, setProgress] = useState(0);
+  const [progress, setProgress] = useState<number>();
+  const processing = typeof progress === "number";
 
   const handleImportButtonClick = () => {
+    setProgress(0);
+
     const inputElement = document.createElement("input");
     inputElement.type = "file";
     inputElement.accept = "image/jpeg";
@@ -71,7 +74,7 @@ export const App: FunctionComponent<{
 
       window.clearInterval(intervalID);
       await interval();
-      setProgress(0);
+      setProgress(undefined);
 
       if (importedPhotos.length) {
         alert(`${importedPhotos.length}枚のEXIF付き写真を取り込みました。`);
@@ -89,6 +92,10 @@ export const App: FunctionComponent<{
           "https://scrapbox.io/hata6502/EXIF%E4%BB%98%E3%81%8D%E5%86%99%E7%9C%9F%E3%82%92%E5%85%A8%E9%81%B8%E6%8A%9E%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95"
         );
       }
+    });
+
+    inputElement.addEventListener("cancel", () => {
+      setProgress(undefined);
     });
 
     inputElement.click();
@@ -111,10 +118,34 @@ export const App: FunctionComponent<{
 
       <button
         type="button"
+        disabled={processing}
         className="absolute right-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 print:hidden"
         onClick={handleImportButtonClick}
       >
-        <PhotoIcon className="h-5 w-5" aria-hidden="true" />
+        {processing ? (
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            className="animate-spin h-5 w-5 text-pink-500"
+          >
+            <circle
+              cx="12"
+              cy="12"
+              r="10"
+              stroke="currentColor"
+              stroke-width="4"
+              className="opacity-25"
+            ></circle>
+            <path
+              fill="currentColor"
+              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+              className="opacity-75"
+            ></path>
+          </svg>
+        ) : (
+          <PhotoIcon className="h-5 w-5" aria-hidden="true" />
+        )}
       </button>
 
       <Popover className="absolute right-2 top-2.5 z-1000 print:hidden">
@@ -147,7 +178,7 @@ export const App: FunctionComponent<{
 
       <div
         className="absolute left-0 top-0 z-1000 h-1 bg-pink-400"
-        style={{ width: `${progress * 100}%` }}
+        style={{ width: `${(progress ?? 0) * 100}%` }}
       />
     </div>
   );
