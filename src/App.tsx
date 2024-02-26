@@ -88,13 +88,13 @@ export const App: FunctionComponent<{
 
       <button
         type="button"
-        className="absolute right-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+        className="absolute right-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 print:hidden"
         onClick={handleImportButtonClick}
       >
         <PhotoIcon className="h-5 w-5" aria-hidden="true" />
       </button>
 
-      <Popover className="absolute right-2 top-2.5 z-1000">
+      <Popover className="absolute right-2 top-2.5 z-1000 print:hidden">
         <Popover.Button className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
           <CalendarIcon className="h-5 w-5" aria-hidden="true" />
         </Popover.Button>
