@@ -60,10 +60,10 @@ export const App: FunctionComponent<{
         }
 
         const { latitude, longitude, originalDate } = exif;
-        const resizedBlob = await resize(file);
+        //const resizedBlob = await resize(file);
         const photo: Photo = {
           name: file.name,
-          blob: resizedBlob,
+          blob: file,
           latitude,
           longitude,
           originalDate,
