@@ -40,41 +40,38 @@ export const App: FunctionComponent<{
       };
       const intervalID = window.setInterval(interval, 3000);
 
+      const importedPhotos = [];
       const files = [...(inputElement.files ?? [])]
         // 写真のファイルは日時で命名されることが多いと思われる
         // 古い写真を先に取り込みやすくして、取り込み中の演出を起こしやすくする
         .toSorted((a, b) => a.name.localeCompare(b.name));
       const photoNames = album.map((photo) => photo.name);
-      const importedPhotos = (
-        await Promise.all(
-          files.map(async (file, fileIndex) => {
-            startTransition(() => {
-              setProgress((fileIndex + 1) / files.length);
-            });
+      for (const [fileIndex, file] of files.entries()) {
+        startTransition(() => {
+          setProgress((fileIndex + 1) / files.length);
+        });
 
-            if (photoNames.includes(file.name)) {
-              return [];
-            }
-            const exif = await readEXIF(file);
-            if (!exif) {
-              return [];
-            }
+        if (photoNames.includes(file.name)) {
+          continue;
+        }
+        const exif = await readEXIF(file);
+        if (!exif) {
+          continue;
+        }
 
-            const { latitude, longitude, originalDate } = exif;
-            const resizedBlob = await resize(file);
-            const photo: Photo = {
-              name: file.name,
-              blob: resizedBlob,
-              latitude,
-              longitude,
-              originalDate,
-            };
-            console.log(photo);
-            await putPhoto(photo);
-            return [photo];
-          })
-        )
-      ).flat();
+        const { latitude, longitude, originalDate } = exif;
+        const resizedBlob = await resize(file);
+        const photo: Photo = {
+          name: file.name,
+          blob: resizedBlob,
+          latitude,
+          longitude,
+          originalDate,
+        };
+        console.log(photo);
+        await putPhoto(photo);
+        importedPhotos.push(photo);
+      }
 
       window.clearInterval(intervalID);
       await interval();
