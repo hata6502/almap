@@ -8,6 +8,7 @@ import { CalendarIcon, PhotoIcon } from "@heroicons/react/20/solid";
 import {
   Fragment,
   FunctionComponent,
+  useEffect,
   useMemo,
   useState,
   useTransition,
@@ -90,7 +91,8 @@ export const App: FunctionComponent<{
       } else {
         alert("EXIF付き写真が見つかりませんでした。");
         open(
-          "https://scrapbox.io/hata6502/EXIF%E4%BB%98%E3%81%8D%E5%86%99%E7%9C%9F%E3%82%92%E5%85%A8%E9%81%B8%E6%8A%9E%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95"
+          "https://scrapbox.io/hata6502/EXIF%E4%BB%98%E3%81%8D%E5%86%99%E7%9C%9F%E3%82%92%E5%85%A8%E9%81%B8%E6%8A%9E%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95",
+          "_blank"
         );
       }
     });
@@ -101,6 +103,19 @@ export const App: FunctionComponent<{
 
     inputElement.click();
   };
+
+  useEffect(() => {
+    if (album.length) {
+      return;
+    }
+
+    alert("TODO: ウェルカムスクリーン　まずは写真を取り込んでもらう");
+    open(
+      "https://scrapbox.io/hata6502/EXIF%E4%BB%98%E3%81%8D%E5%86%99%E7%9C%9F%E3%82%92%E5%85%A8%E9%81%B8%E6%8A%9E%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95",
+      "_blank"
+    );
+    handleImportButtonClick();
+  }, [album]);
 
   const filteredAlbum = useMemo(() => {
     const [startDate, endDate] = dateRange;
