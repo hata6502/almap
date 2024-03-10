@@ -1,7 +1,7 @@
 // @ts-expect-error
 import piexif from "piexifjs";
 
-export const readEXIF = async (file: File) => {
+export const readEXIF = async (blob: Blob) => {
   try {
     const appendedDataURL = await new Promise<string>((resolve, reject) => {
       const fileReader = new FileReader();
@@ -17,7 +17,7 @@ export const readEXIF = async (file: File) => {
         reject(fileReader.error);
       };
 
-      fileReader.readAsDataURL(file);
+      fileReader.readAsDataURL(blob);
     });
     const exif = piexif.load(appendedDataURL);
 
@@ -57,8 +57,8 @@ export const readEXIF = async (file: File) => {
   }
 };
 
-export const resize = async (file: File) => {
-  const imageBitmap = await createImageBitmap(file);
+export const resize = async (blob: Blob) => {
+  const imageBitmap = await createImageBitmap(blob);
   const resizeRatio = 512 / Math.max(imageBitmap.width, imageBitmap.height);
 
   const canvasElement = document.createElement("canvas");
@@ -79,12 +79,12 @@ export const resize = async (file: File) => {
   );
 
   return new Promise<Blob>((resolve, reject) => {
-    canvasElement.toBlob((blob) => {
-      if (!blob) {
+    canvasElement.toBlob((resizedBlob) => {
+      if (!resizedBlob) {
         reject(new Error("Failed to resize image"));
         return;
       }
-      resolve(blob);
+      resolve(resizedBlob);
     }, "image/jpeg");
   });
 };

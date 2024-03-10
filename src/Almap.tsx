@@ -12,7 +12,16 @@ import { boundaries, drawTile, tileSize } from "./tile";
 export const Almap: FunctionComponent<{
   album: Photo[];
   albumFiltered: boolean;
-}> = ({ album, albumFiltered }) => {
+  defaultLatitude?: number;
+  defaultLongitude?: number;
+  defaultZoom: number;
+}> = ({
+  album,
+  albumFiltered,
+  defaultLatitude,
+  defaultLongitude,
+  defaultZoom,
+}) => {
   const albumRef = useRef(album);
   const loadedTilesRef = useRef<HTMLCanvasElement[]>([]);
   const mapRef = useRef<L.Map>();
@@ -52,7 +61,6 @@ export const Almap: FunctionComponent<{
     let isMoving = false;
 
     const map = L.map(id, { zoomControl: false })
-      .locate({ setView: true, maxZoom: 13 })
       .on("movestart", () => {
         isMoving = true;
       })
@@ -61,6 +69,12 @@ export const Almap: FunctionComponent<{
           isMoving = false;
         });
       });
+
+    if (defaultLatitude && defaultLongitude) {
+      map.setView([defaultLatitude, defaultLongitude], defaultZoom);
+    } else {
+      map.locate({ setView: true, maxZoom: defaultZoom });
+    }
 
     const createTile: L.GridLayer["createTile"] = function (coords, done) {
       const canvasElement = document.createElement("canvas");

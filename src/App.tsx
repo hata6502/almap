@@ -4,18 +4,38 @@ import { Photo, getAlbum, putPhoto } from "./database";
 import { readEXIF, resize } from "./import";
 
 import { Popover, Transition } from "@headlessui/react";
-import { CalendarIcon, PhotoIcon } from "@heroicons/react/20/solid";
+import { CalendarDaysIcon, PhotoIcon } from "@heroicons/react/20/solid";
 import {
   Fragment,
   FunctionComponent,
+  useEffect,
   useMemo,
   useState,
   useTransition,
 } from "react";
 
+type WebMessage =
+  | {
+      type: "importPhoto";
+      id: string;
+      dataURL: string;
+      location: {
+        latitude: number;
+        longitude: number;
+      };
+      creationTime: number;
+    }
+  | {
+      type: "progress";
+      progress?: number;
+    };
+
 export const App: FunctionComponent<{
   defaultAlbum: Photo[];
-}> = ({ defaultAlbum }) => {
+  defaultLatitude?: number;
+  defaultLongitude?: number;
+  defaultZoom: number;
+}> = ({ defaultAlbum, defaultLatitude, defaultLongitude, defaultZoom }) => {
   const [, startTransition] = useTransition();
 
   const [album, setAlbum] = useState(defaultAlbum);
@@ -26,6 +46,66 @@ export const App: FunctionComponent<{
   const [progress, setProgress] = useState<number>();
   const processing = typeof progress === "number";
 
+  const updateAlbum = async () => {
+    setAlbum(await getAlbum());
+  };
+
+  useEffect(() => {
+    if (!("ReactNativeWebView" in window)) {
+      return;
+    }
+
+    let intervalID: number | undefined;
+    // @ts-expect-error
+    const handleWebMessage = async (event) => {
+      const message: WebMessage = JSON.parse(event.data);
+
+      switch (message.type) {
+        case "importPhoto": {
+          const response = await fetch(message.dataURL);
+          await putPhoto({
+            name: message.id,
+            blob: await response.blob(),
+            latitude: message.location.latitude,
+            longitude: message.location.longitude,
+            originalDate: new Date(message.creationTime),
+          });
+          break;
+        }
+
+        case "progress": {
+          startTransition(() => {
+            setProgress(message.progress);
+          });
+
+          if (message.progress === 0) {
+            if (!defaultAlbum.length) {
+              alert(
+                "デバイス内のアルバムを取り込みます。しばらくお待ちください。"
+              );
+            }
+            intervalID = window.setInterval(updateAlbum, 3000);
+          } else if (message.progress === undefined) {
+            window.clearInterval(intervalID);
+            await updateAlbum();
+          }
+          break;
+        }
+
+        default: {
+          throw new Error(`Unknown message: ${message satisfies never}`);
+        }
+      }
+    };
+    // Web APIのDocumentにmessageイベントは存在しない
+    // react-native-webviewからのmessageを受け取る
+    document.addEventListener("message", handleWebMessage);
+
+    return () => {
+      document.removeEventListener("message", handleWebMessage);
+    };
+  }, []);
+
   const handleImportButtonClick = () => {
     setProgress(0);
 
@@ -35,10 +115,7 @@ export const App: FunctionComponent<{
     inputElement.multiple = true;
 
     inputElement.addEventListener("change", async () => {
-      const interval = async () => {
-        setAlbum(await getAlbum());
-      };
-      const intervalID = window.setInterval(interval, 3000);
+      const intervalID = window.setInterval(updateAlbum, 3000);
 
       const importedPhotos = [];
       const files = [...(inputElement.files ?? [])]
@@ -74,7 +151,7 @@ export const App: FunctionComponent<{
       }
 
       window.clearInterval(intervalID);
-      await interval();
+      await updateAlbum();
       setProgress(undefined);
 
       if (importedPhotos.length) {
@@ -115,43 +192,51 @@ export const App: FunctionComponent<{
 
   return (
     <div className="relative h-full">
-      <Almap album={filteredAlbum} albumFiltered={albumFiltered} />
+      <Almap
+        album={filteredAlbum}
+        albumFiltered={albumFiltered}
+        defaultLatitude={defaultLatitude}
+        defaultLongitude={defaultLongitude}
+        defaultZoom={defaultZoom}
+      />
 
-      <button
-        type="button"
-        disabled={processing}
-        className="absolute right-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 print:hidden"
-        onClick={handleImportButtonClick}
-      >
-        {processing ? (
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            fill="none"
-            viewBox="0 0 24 24"
-            className="animate-spin h-5 w-5 text-pink-500"
-          >
-            <circle
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              stroke-width="4"
-              className="opacity-25"
-            ></circle>
-            <path
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-              className="opacity-75"
-            ></path>
-          </svg>
-        ) : (
-          <PhotoIcon className="h-5 w-5" aria-hidden="true" />
-        )}
-      </button>
+      {!("ReactNativeWebView" in window) && (
+        <button
+          type="button"
+          disabled={processing}
+          className="absolute right-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 print:hidden"
+          onClick={handleImportButtonClick}
+        >
+          {processing ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="animate-spin h-5 w-5 text-pink-500"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                className="opacity-25"
+              ></circle>
+              <path
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                className="opacity-75"
+              ></path>
+            </svg>
+          ) : (
+            <PhotoIcon className="h-5 w-5" aria-hidden="true" />
+          )}
+        </button>
+      )}
 
       <Popover className="absolute right-2 top-2.5 z-1000 print:hidden">
         <Popover.Button className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-          <CalendarIcon className="h-5 w-5" aria-hidden="true" />
+          <CalendarDaysIcon className="h-5 w-5" aria-hidden="true" />
         </Popover.Button>
 
         <Transition
