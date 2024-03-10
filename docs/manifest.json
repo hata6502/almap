@@ -1,8 +1,0 @@
-{
-  "name": "almap",
-  "short_name": "almap",
-  "start_url": ".",
-  "display": "standalone",
-  "background_color": "#ffffff",
-  "icons": [{ "src": "favicon.png", "sizes": "512x512", "type": "image/png" }]
-}
