@@ -3,7 +3,6 @@ const almapRequests = [
   "./favicon.png",
   "./index.css",
   "./index.js",
-  "./manifest.json",
   "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css",
 ];
 const almapCacheName = `almap-${process.env.TIMESTAMP}`;
