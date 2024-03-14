@@ -29,14 +29,13 @@ serviceWorker.addEventListener("activate", (event) => {
 serviceWorker.addEventListener("fetch", (event) => {
   event.respondWith(
     (async () => {
-      const isOpenStreetMapRequest = [
-        "https://nominatim.openstreetmap.org/",
-        "https://tile.openstreetmap.jp/",
-      ].some((openStreetMapURL) =>
-        event.request.url.startsWith(openStreetMapURL)
+      const isOpenStreetMapRequest = ["https://tile.openstreetmap.jp/"].some(
+        (openStreetMapURL) => event.request.url.startsWith(openStreetMapURL)
       );
 
-      const cacheResponse = await caches.match(event.request);
+      const cacheResponse = await caches.match(event.request, {
+        ignoreSearch: true,
+      });
       if (cacheResponse) {
         return cacheResponse;
       }
