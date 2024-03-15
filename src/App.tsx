@@ -204,7 +204,7 @@ export const App: FunctionComponent<{
         <button
           type="button"
           disabled={processing}
-          className="absolute right-12 top-12 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 print:hidden"
+          className="absolute right-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 print:hidden"
           onClick={handleImportButtonClick}
         >
           {processing ? (
@@ -234,7 +234,7 @@ export const App: FunctionComponent<{
         </button>
       )}
 
-      <Popover className="absolute right-2 top-12 z-1000 print:hidden">
+      <Popover className="absolute right-2 top-2.5 z-1000 print:hidden">
         <Popover.Button className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
           <CalendarDaysIcon className="h-5 w-5" aria-hidden="true" />
         </Popover.Button>
