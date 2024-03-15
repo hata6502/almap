@@ -57,8 +57,8 @@ export const App: FunctionComponent<{
 
     let intervalID: number | undefined;
     // @ts-expect-error
-    const handleWebMessage = async (event) => {
-      const message: WebMessage = JSON.parse(event.data);
+    const handleAlmapWebMessage = async (event) => {
+      const message: WebMessage = event.detail;
 
       switch (message.type) {
         case "importPhoto": {
@@ -92,12 +92,10 @@ export const App: FunctionComponent<{
         }
       }
     };
-    // Web APIのDocumentにmessageイベントは存在しない
-    // react-native-webviewからのmessageを受け取る
-    document.addEventListener("message", handleWebMessage);
+    addEventListener("almapwebmessage", handleAlmapWebMessage);
 
     return () => {
-      document.removeEventListener("message", handleWebMessage);
+      removeEventListener("almapwebmessage", handleAlmapWebMessage);
     };
   }, []);
 
