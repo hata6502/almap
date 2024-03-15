@@ -12,9 +12,11 @@ export const Calendar: FunctionComponent<{
   const [dateOfMonth, setDateOfMonth] = useState(new Date());
 
   const days = getDaysOfMonth(dateOfMonth);
-  const heatmap = Map.groupBy(album, (photo) =>
-    new Date(photo.originalDate).setHours(0, 0, 0, 0)
-  );
+  const heatmap = new Map<number, Photo[]>();
+  for (const photo of album) {
+    const time = new Date(photo.originalDate).setHours(0, 0, 0, 0);
+    heatmap.set(time, [...(heatmap.get(time) ?? []), photo]);
+  }
 
   const handlePrevMonthButtonClick = () => {
     setDateOfMonth((current) => {
