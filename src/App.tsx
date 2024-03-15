@@ -79,11 +79,6 @@ export const App: FunctionComponent<{
           });
 
           if (message.progress === 0) {
-            if (!defaultAlbum.length) {
-              alert(
-                "デバイス内のアルバムを取り込みます。しばらくお待ちください。"
-              );
-            }
             intervalID = window.setInterval(updateAlbum, 3000);
           } else if (message.progress === undefined) {
             window.clearInterval(intervalID);
