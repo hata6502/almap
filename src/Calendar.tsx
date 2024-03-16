@@ -131,8 +131,7 @@ export const Calendar: FunctionComponent<{
                 dayIndex === days.length - 7 && "rounded-bl-md",
                 dayIndex === days.length - 1 && "rounded-br-md",
                 currentMonth ? "text-gray-900" : "text-gray-400",
-                selected && "font-semibold",
-                today && "font-bold"
+                today ? "font-bold" : selected && "font-semibold"
               )}
               style={{ background }}
               onClick={handleClick}

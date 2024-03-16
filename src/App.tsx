@@ -39,12 +39,19 @@ export const App: FunctionComponent<{
   const [, startTransition] = useTransition();
 
   const [album, setAlbum] = useState(defaultAlbum);
-  const [dateRange, setDateRange] = useState<[Date, Date]>([
-    new Date(-8640000000000000),
-    new Date(8640000000000000),
-  ]);
   const [progress, setProgress] = useState<number>();
   const processing = typeof progress === "number";
+
+  const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
+    const oneWeekAgo = new Date();
+    oneWeekAgo.setDate(oneWeekAgo.getDate() - 6);
+    oneWeekAgo.setHours(0, 0, 0, 0);
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    return [oneWeekAgo, today];
+  });
 
   const updateAlbum = async () => {
     setAlbum(await getAlbum());
