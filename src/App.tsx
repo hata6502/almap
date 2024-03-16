@@ -86,13 +86,20 @@ export const App: FunctionComponent<{
             setProgress(message.progress);
           });
 
+          const drawImportedPhotos = async () => {
+            if (!importPhotoPromises.length) {
+              return;
+            }
+
+            await updateAlbum();
+          };
           if (message.progress === 0) {
-            intervalID = window.setInterval(updateAlbum, 3000);
+            intervalID = window.setInterval(drawImportedPhotos, 3000);
           } else if (message.progress === undefined) {
             await Promise.all(importPhotoPromises);
 
             window.clearInterval(intervalID);
-            await updateAlbum();
+            await drawImportedPhotos();
           }
           break;
         }

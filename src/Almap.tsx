@@ -1,5 +1,6 @@
+import clsx from "clsx";
 import L from "leaflet";
-import { FunctionComponent, useEffect, useId, useRef } from "react";
+import { FunctionComponent, useEffect, useId, useRef, useState } from "react";
 import { Photo } from "./database";
 import { boundaries, drawTile, tileSize } from "./tile";
 
@@ -7,6 +8,8 @@ export const Almap: FunctionComponent<{
   album: Photo[];
   albumFiltered: boolean;
 }> = ({ album, albumFiltered }) => {
+  const [display, setDisplay] = useState(false);
+
   const albumRef = useRef(album);
   const loadedTiles = useRef<HTMLCanvasElement[]>([]);
   const map = useRef<L.Map>();
@@ -39,6 +42,7 @@ export const Almap: FunctionComponent<{
         });
       })
     );
+    setDisplay(true);
   }, [album, albumFiltered]);
 
   useEffect(() => {
@@ -133,5 +137,5 @@ export const Almap: FunctionComponent<{
     };
   }, []);
 
-  return <div id={id} className="h-full" />;
+  return <div id={id} className={clsx("h-full", !display && "hidden")} />;
 };
