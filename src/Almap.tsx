@@ -1,6 +1,14 @@
-import clsx from "clsx";
+import { Dialog, Transition } from "@headlessui/react";
+import { XMarkIcon } from "@heroicons/react/24/outline";
 import L from "leaflet";
-import { FunctionComponent, useEffect, useId, useRef, useState } from "react";
+import {
+  Fragment,
+  FunctionComponent,
+  useEffect,
+  useId,
+  useRef,
+  useState,
+} from "react";
 import { Photo } from "./database";
 import { boundaries, drawTile, tileSize } from "./tile";
 
@@ -8,42 +16,24 @@ export const Almap: FunctionComponent<{
   album: Photo[];
   albumFiltered: boolean;
 }> = ({ album, albumFiltered }) => {
-  const [display, setDisplay] = useState(false);
+  const [ready] = useState(() => {
+    let resolve: () => void;
+    const promise = new Promise<void>((res) => {
+      resolve = res;
+    });
+    // @ts-expect-error
+    return { promise, resolve };
+  });
+
+  const [memory, setMemory] = useState<(Photo & { url: string })[]>([]);
+  const [openMemory, setOpenMemory] = useState(false);
 
   const albumRef = useRef(album);
   const loadedTiles = useRef<HTMLCanvasElement[]>([]);
   const map = useRef<L.Map>();
   const id = useId();
 
-  useEffect(() => {
-    albumRef.current = album;
-
-    if (!map.current) {
-      return;
-    }
-
-    if (album.length && albumFiltered) {
-      map.current.fitBounds(
-        L.latLngBounds(
-          album.map((photo) => L.latLng(photo.latitude, photo.longitude))
-        )
-      );
-    }
-    Promise.all(
-      loadedTiles.current.map(async (canvasElement) => {
-        if (!map.current) {
-          return;
-        }
-
-        await drawTile({
-          canvasElement,
-          album: albumRef.current,
-          map: map.current,
-        });
-      })
-    );
-    setDisplay(true);
-  }, [album, albumFiltered]);
+  const handleCloseMemory = () => setOpenMemory(false);
 
   useEffect(() => {
     let isMoving = false;
@@ -69,6 +59,8 @@ export const Almap: FunctionComponent<{
 
       (async () => {
         try {
+          await ready.promise;
+
           // @ts-expect-error
           canvasElement.coords = coords;
           await drawTile({
@@ -86,13 +78,18 @@ export const Almap: FunctionComponent<{
             const y = Math.floor((event.offsetY / tileSize) * boundaries);
             // @ts-expect-error
             const boundaryAlbum = canvasElement.albums[y][x];
-            const thumbnail = boundaryAlbum.at(0);
-
-            if (boundaryAlbum.length >= 2) {
-              // TODO: 一覧
-            } else if (thumbnail) {
-              open(URL.createObjectURL(thumbnail.blob));
+            if (!boundaryAlbum.length) {
+              return;
             }
+
+            setMemory(
+              // @ts-expect-error
+              boundaryAlbum.map((photo) => ({
+                ...photo,
+                url: URL.createObjectURL(photo.blob),
+              }))
+            );
+            setOpenMemory(true);
           });
 
           done(undefined, canvasElement);
@@ -137,5 +134,103 @@ export const Almap: FunctionComponent<{
     };
   }, []);
 
-  return <div id={id} className={clsx("h-full", !display && "hidden")} />;
+  useEffect(() => {
+    albumRef.current = album;
+
+    if (!map.current) {
+      return;
+    }
+
+    if (album.length && albumFiltered) {
+      map.current.fitBounds(
+        L.latLngBounds(
+          album.map((photo) => L.latLng(photo.latitude, photo.longitude))
+        )
+      );
+    }
+    Promise.all(
+      loadedTiles.current.map(async (canvasElement) => {
+        if (!map.current) {
+          return;
+        }
+
+        await drawTile({
+          canvasElement,
+          album: albumRef.current,
+          map: map.current,
+        });
+      })
+    );
+
+    ready.resolve();
+  }, [album, albumFiltered]);
+
+  return (
+    <>
+      <div id={id} className="h-full" />
+
+      <Transition.Root show={openMemory} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-1000"
+          onClose={handleCloseMemory}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 hidden bg-gray-500 bg-opacity-75 transition-opacity md:block" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 z-1000 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-stretch justify-center text-center md:items-center md:px-2 lg:px-4">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 translate-y-4 md:translate-y-0 md:scale-95"
+                enterTo="opacity-100 translate-y-0 md:scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 translate-y-0 md:scale-100"
+                leaveTo="opacity-0 translate-y-4 md:translate-y-0 md:scale-95"
+              >
+                <Dialog.Panel className="flex w-full max-w-xl transform text-left text-base transition md:my-8 md:px-4">
+                  <div className="relative w-full bg-white px-4 pb-8 pt-14 shadow-2xl sm:px-6 sm:pt-8 md:p-6 lg:p-8">
+                    <button
+                      type="button"
+                      className="absolute right-4 top-4 text-gray-400 hover:text-gray-500 sm:right-6 sm:top-8 md:right-6 md:top-6 lg:right-8 lg:top-8"
+                      onClick={handleCloseMemory}
+                    >
+                      <span className="sr-only">閉じる</span>
+                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    </button>
+
+                    <div className="flex flex-col space-y-4">
+                      {memory.map((photo) => (
+                        <div key={photo.name}>
+                          <h3>{photo.originalDate.toLocaleString()}</h3>
+
+                          <div className="mt-1">
+                            <img
+                              alt={photo.name}
+                              src={photo.url}
+                              className="w-full rounded-lg"
+                            />
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition.Root>
+    </>
+  );
 };

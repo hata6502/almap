@@ -8,12 +8,8 @@
       http-equiv="Content-Security-Policy"
       content="
         default-src 'self';
-        connect-src
-          'self'
-          data:
-          https://tile.openstreetmap.jp
-        ;
-        img-src 'self' data:;
+        connect-src 'self' data: https://tile.openstreetmap.jp;
+        img-src 'self' blob: data:;
         style-src 'self' https://unpkg.com;
       "
     />
