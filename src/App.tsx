@@ -32,10 +32,7 @@ type WebMessage =
 
 export const App: FunctionComponent<{
   defaultAlbum: Photo[];
-  defaultLatitude?: number;
-  defaultLongitude?: number;
-  defaultZoom: number;
-}> = ({ defaultAlbum, defaultLatitude, defaultLongitude, defaultZoom }) => {
+}> = ({ defaultAlbum }) => {
   const [, startTransition] = useTransition();
 
   const [album, setAlbum] = useState(defaultAlbum);
@@ -192,13 +189,7 @@ export const App: FunctionComponent<{
 
   return (
     <div className="relative h-full">
-      <Almap
-        album={filteredAlbum}
-        albumFiltered={albumFiltered}
-        defaultLatitude={defaultLatitude}
-        defaultLongitude={defaultLongitude}
-        defaultZoom={defaultZoom}
-      />
+      <Almap album={filteredAlbum} albumFiltered={albumFiltered} />
 
       {!("ReactNativeWebView" in window) && (
         <button

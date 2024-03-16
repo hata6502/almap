@@ -1,66 +1,52 @@
 import L from "leaflet";
-import {
-  FunctionComponent,
-  useCallback,
-  useEffect,
-  useId,
-  useRef,
-} from "react";
+import { FunctionComponent, useEffect, useId, useRef } from "react";
 import { Photo } from "./database";
 import { boundaries, drawTile, tileSize } from "./tile";
 
 export const Almap: FunctionComponent<{
   album: Photo[];
   albumFiltered: boolean;
-  defaultLatitude?: number;
-  defaultLongitude?: number;
-  defaultZoom: number;
-}> = ({
-  album,
-  albumFiltered,
-  defaultLatitude,
-  defaultLongitude,
-  defaultZoom,
-}) => {
+}> = ({ album, albumFiltered }) => {
   const albumRef = useRef(album);
-  const loadedTilesRef = useRef<HTMLCanvasElement[]>([]);
-  const mapRef = useRef<L.Map>();
+  const loadedTiles = useRef<HTMLCanvasElement[]>([]);
+  const map = useRef<L.Map>();
   const id = useId();
-
-  const draw = useCallback(async () => {
-    for (const canvasElement of loadedTilesRef.current) {
-      if (!mapRef.current) {
-        return;
-      }
-
-      await drawTile({
-        canvasElement,
-        album: albumRef.current,
-        map: mapRef.current,
-      });
-    }
-  }, []);
 
   useEffect(() => {
     albumRef.current = album;
 
-    if (!mapRef.current) {
+    if (!map.current) {
       return;
     }
-    if (albumFiltered && album.length) {
-      mapRef.current.fitBounds(
+
+    if (album.length && albumFiltered) {
+      map.current.fitBounds(
         L.latLngBounds(
           album.map((photo) => L.latLng(photo.latitude, photo.longitude))
         )
       );
     }
-    draw();
-  }, [album, draw]);
+    Promise.all(
+      loadedTiles.current.map(async (canvasElement) => {
+        if (!map.current) {
+          return;
+        }
+
+        await drawTile({
+          canvasElement,
+          album: albumRef.current,
+          map: map.current,
+        });
+      })
+    );
+  }, [album, albumFiltered]);
 
   useEffect(() => {
     let isMoving = false;
 
-    const map = L.map(id, { zoomControl: false })
+    const currentMap = L.map(id, { zoomControl: false })
+      // 日本経緯度原点
+      .setView([35.39291572, 139.44288869], 5)
       .on("movestart", () => {
         isMoving = true;
       })
@@ -69,12 +55,6 @@ export const Almap: FunctionComponent<{
           isMoving = false;
         });
       });
-
-    if (defaultLatitude && defaultLongitude) {
-      map.setView([defaultLatitude, defaultLongitude], defaultZoom);
-    } else {
-      map.locate({ setView: true, maxZoom: defaultZoom });
-    }
 
     const createTile: L.GridLayer["createTile"] = function (coords, done) {
       const canvasElement = document.createElement("canvas");
@@ -90,7 +70,7 @@ export const Almap: FunctionComponent<{
           await drawTile({
             canvasElement,
             album: albumRef.current,
-            map,
+            map: currentMap,
           });
 
           canvasElement.addEventListener("click", async (event) => {
@@ -136,20 +116,20 @@ export const Almap: FunctionComponent<{
     new AlmapLayer()
       .on("tileload", (event: L.TileEvent) => {
         // @ts-expect-error
-        loadedTilesRef.current = [...loadedTilesRef.current, event.tile];
+        loadedTiles.current = [...loadedTiles.current, event.tile];
       })
       .on("tileunload", (event: L.TileEvent) => {
-        loadedTilesRef.current = loadedTilesRef.current.filter(
+        loadedTiles.current = loadedTiles.current.filter(
           // @ts-expect-error
           (loadedTile) => loadedTile !== event.tile
         );
       })
-      .addTo(map);
+      .addTo(currentMap);
 
-    mapRef.current = map;
+    map.current = currentMap;
     return () => {
-      map.remove();
-      mapRef.current = undefined;
+      currentMap.remove();
+      map.current = undefined;
     };
   }, []);
 
