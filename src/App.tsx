@@ -59,21 +59,25 @@ export const App: FunctionComponent<{
       return;
     }
 
+    const importPhotoPromises: Promise<void>[] = [];
     let intervalID: number | undefined;
     // @ts-expect-error
     const handleAlmapWebMessage = async (event) => {
       const message: WebMessage = event.detail;
-
       switch (message.type) {
         case "importPhoto": {
-          const response = await fetch(message.dataURL);
-          await putPhoto({
-            name: message.id,
-            blob: await response.blob(),
-            latitude: message.location.latitude,
-            longitude: message.location.longitude,
-            originalDate: new Date(message.creationTime),
-          });
+          importPhotoPromises.push(
+            (async () => {
+              const response = await fetch(message.dataURL);
+              await putPhoto({
+                name: message.id,
+                blob: await response.blob(),
+                latitude: message.location.latitude,
+                longitude: message.location.longitude,
+                originalDate: new Date(message.creationTime),
+              });
+            })()
+          );
           break;
         }
 
@@ -85,6 +89,8 @@ export const App: FunctionComponent<{
           if (message.progress === 0) {
             intervalID = window.setInterval(updateAlbum, 3000);
           } else if (message.progress === undefined) {
+            await Promise.all(importPhotoPromises);
+
             window.clearInterval(intervalID);
             await updateAlbum();
           }
