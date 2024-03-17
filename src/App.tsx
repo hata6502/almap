@@ -40,6 +40,10 @@ export const App: FunctionComponent<{
   const processing = typeof progress === "number";
 
   const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
+    if (!album.length) {
+      return [new Date(-8640000000000000), new Date(8640000000000000)];
+    }
+
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 6);
     oneWeekAgo.setHours(0, 0, 0, 0);
