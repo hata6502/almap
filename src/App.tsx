@@ -3,7 +3,7 @@ import { Calendar } from "./Calendar";
 import { Photo, getAlbum, putPhoto } from "./database";
 import { readEXIF, resize } from "./import";
 
-import { Popover, Transition } from "@headlessui/react";
+import { Dialog, Popover, Transition } from "@headlessui/react";
 import { CalendarDaysIcon, PhotoIcon } from "@heroicons/react/20/solid";
 import {
   Fragment,
@@ -53,6 +53,11 @@ export const App: FunctionComponent<{
 
     return [oneWeekAgo, today];
   });
+
+  const [androidDialogOpen, setAndroidDialogOpen] = useState(
+    navigator.userAgent.includes("Android") && !("ReactNativeWebView" in window)
+  );
+  const [exifDialogOpen, setEXIFDialogOpen] = useState(false);
 
   const updateAlbum = async () => {
     setAlbum(await getAlbum());
@@ -169,8 +174,6 @@ export const App: FunctionComponent<{
       setProgress(undefined);
 
       if (importedPhotos.length) {
-        alert(`${importedPhotos.length}枚のEXIF付き写真を取り込みました。`);
-
         const importedTimes = importedPhotos.map((photo) =>
           new Date(photo.originalDate).setHours(0, 0, 0, 0)
         );
@@ -179,10 +182,7 @@ export const App: FunctionComponent<{
           new Date(Math.max(...importedTimes)),
         ]);
       } else {
-        alert("EXIF付き写真が見つかりませんでした。");
-        open(
-          "https://scrapbox.io/hata6502/EXIF%E4%BB%98%E3%81%8D%E5%86%99%E7%9C%9F%E3%82%92%E5%85%A8%E9%81%B8%E6%8A%9E%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95"
-        );
+        setEXIFDialogOpen(true);
       }
     });
 
@@ -269,6 +269,129 @@ export const App: FunctionComponent<{
           </Popover.Panel>
         </Transition>
       </Popover>
+
+      <Transition.Root show={androidDialogOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-1000"
+          onClose={setAndroidDialogOpen}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                enterTo="opacity-100 translate-y-0 sm:scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              >
+                <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white p-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
+                  <div>
+                    <div className="text-center">
+                      <Dialog.Title
+                        as="h3"
+                        className="text-base font-semibold leading-6 text-gray-900"
+                      >
+                        Androidアプリをダウンロード
+                      </Dialog.Title>
+
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                          Android版では、撮った写真が自動で取り込まれます。
+                          クローズドテストにご協力をお願いします🙏
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-5 sm:mt-6">
+                    <a
+                      href="https://twitter.com/hata6502/status/1770083490509500608"
+                      className="inline-flex w-full justify-center rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600"
+                    >
+                      Google Play Storeを開く
+                    </a>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition.Root>
+
+      <Transition.Root show={exifDialogOpen} as={Fragment}>
+        <Dialog
+          as="div"
+          className="relative z-1000"
+          onClose={setEXIFDialogOpen}
+        >
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
+            <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+                enterTo="opacity-100 translate-y-0 sm:scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 translate-y-0 sm:scale-100"
+                leaveTo="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95"
+              >
+                <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-white p-4 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-sm sm:p-6">
+                  <div>
+                    <div className="text-center">
+                      <Dialog.Title
+                        as="h3"
+                        className="text-base font-semibold leading-6 text-gray-900"
+                      >
+                        EXIF付き写真が見つかりませんでした
+                      </Dialog.Title>
+
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">
+                          <a
+                            href="https://scrapbox.io/hata6502/EXIF%E4%BB%98%E3%81%8D%E5%86%99%E7%9C%9F%E3%82%92%E5%85%A8%E9%81%B8%E6%8A%9E%E3%81%99%E3%82%8B%E6%96%B9%E6%B3%95"
+                            target="_blank"
+                            className="text-pink-500 underline hover:text-pink-700"
+                          >
+                            EXIF付き写真を全選択する方法
+                          </a>
+                          を参考にして、もう一度写真を選択してみてください。
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition.Root>
 
       <div
         className="absolute left-0 top-0 z-1000 h-1 bg-pink-400"
