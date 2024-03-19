@@ -2,15 +2,21 @@ import { Photo } from "./database";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
-import { Dispatch, FunctionComponent, SetStateAction, useState } from "react";
+import { Dispatch, FunctionComponent, SetStateAction } from "react";
 
 export const Calendar: FunctionComponent<{
   album: Photo[];
+  dateOfMonth: Date;
   dateRange: [Date, Date];
+  setDateOfMonth: Dispatch<SetStateAction<Date>>;
   setDateRange: Dispatch<SetStateAction<[Date, Date]>>;
-}> = ({ album, dateRange: [start, end], setDateRange }) => {
-  const [dateOfMonth, setDateOfMonth] = useState(new Date());
-
+}> = ({
+  album,
+  dateOfMonth,
+  dateRange: [start, end],
+  setDateOfMonth,
+  setDateRange,
+}) => {
   const days = getDaysOfMonth(dateOfMonth);
   const heatmap = new Map<number, Photo[]>();
   for (const photo of album) {

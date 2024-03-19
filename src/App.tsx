@@ -39,6 +39,7 @@ export const App: FunctionComponent<{
   const [progress, setProgress] = useState<number>();
   const processing = typeof progress === "number";
 
+  const [dateOfMonth, setDateOfMonth] = useState(new Date());
   const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
     if (!album.length) {
       return [new Date(-8640000000000000), new Date(8640000000000000)];
@@ -177,10 +178,11 @@ export const App: FunctionComponent<{
         const importedTimes = importedPhotos.map((photo) =>
           new Date(photo.originalDate).setHours(0, 0, 0, 0)
         );
-        setDateRange([
-          new Date(Math.min(...importedTimes)),
-          new Date(Math.max(...importedTimes)),
-        ]);
+
+        const startDate = new Date(Math.min(...importedTimes));
+        const endDate = new Date(Math.max(...importedTimes));
+        setDateOfMonth(startDate);
+        setDateRange([startDate, endDate]);
       } else {
         setEXIFDialogOpen(true);
       }
@@ -265,7 +267,9 @@ export const App: FunctionComponent<{
               >
                 <Calendar
                   album={album}
+                  dateOfMonth={dateOfMonth}
                   dateRange={dateRange}
+                  setDateOfMonth={setDateOfMonth}
                   setDateRange={setDateRange}
                 />
               </Popover.Panel>
