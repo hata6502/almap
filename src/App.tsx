@@ -208,67 +208,71 @@ export const App: FunctionComponent<{
     <div className="relative h-full">
       <Almap album={filteredAlbum} albumFiltered={albumFiltered} />
 
-      {!("ReactNativeWebView" in window) && (
-        <button
-          type="button"
-          disabled={processing}
-          className="absolute right-12 top-2.5 z-1000 rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50 print:hidden"
-          onClick={handleImportButtonClick}
-        >
-          {processing ? (
-            <svg
-              xmlns="http://www.w3.org/2000/svg"
-              fill="none"
-              viewBox="0 0 24 24"
-              className="animate-spin h-5 w-5 text-pink-500"
-            >
-              <circle
-                cx="12"
-                cy="12"
-                r="10"
-                stroke="currentColor"
-                strokeWidth="4"
-                className="opacity-25"
-              ></circle>
-              <path
-                fill="currentColor"
-                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                className="opacity-75"
-              ></path>
-            </svg>
-          ) : (
-            <PhotoIcon className="h-5 w-5" aria-hidden="true" />
-          )}
-        </button>
-      )}
-
-      <Popover className="absolute right-2 top-2.5 z-1000 print:hidden">
-        <Popover.Button className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
-          <CalendarDaysIcon className="h-5 w-5" aria-hidden="true" />
-        </Popover.Button>
-
-        <Transition
-          as={Fragment}
-          enter="transition ease-out duration-100"
-          enterFrom="transform opacity-0 scale-95"
-          enterTo="transform opacity-100 scale-100"
-          leave="transition ease-in duration-75"
-          leaveFrom="transform opacity-100 scale-100"
-          leaveTo="transform opacity-0 scale-95"
-          unmount={false}
-        >
-          <Popover.Panel
-            unmount={false}
-            className="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+      <div className="absolute right-2.5 top-2.5 z-1000 flex gap-2 print:hidden">
+        {!("ReactNativeWebView" in window) && (
+          <button
+            type="button"
+            disabled={processing}
+            className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+            onClick={handleImportButtonClick}
           >
-            <Calendar
-              album={album}
-              dateRange={dateRange}
-              setDateRange={setDateRange}
-            />
-          </Popover.Panel>
-        </Transition>
-      </Popover>
+            {processing ? (
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                className="animate-spin h-5 w-5 text-pink-500"
+              >
+                <circle
+                  cx="12"
+                  cy="12"
+                  r="10"
+                  stroke="currentColor"
+                  strokeWidth="4"
+                  className="opacity-25"
+                ></circle>
+                <path
+                  fill="currentColor"
+                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  className="opacity-75"
+                ></path>
+              </svg>
+            ) : (
+              <PhotoIcon className="h-5 w-5" aria-hidden="true" />
+            )}
+          </button>
+        )}
+
+        {Boolean(album.length) && (
+          <Popover>
+            <Popover.Button className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50">
+              <CalendarDaysIcon className="h-5 w-5" aria-hidden="true" />
+            </Popover.Button>
+
+            <Transition
+              as={Fragment}
+              enter="transition ease-out duration-100"
+              enterFrom="transform opacity-0 scale-95"
+              enterTo="transform opacity-100 scale-100"
+              leave="transition ease-in duration-75"
+              leaveFrom="transform opacity-100 scale-100"
+              leaveTo="transform opacity-0 scale-95"
+              unmount={false}
+            >
+              <Popover.Panel
+                unmount={false}
+                className="absolute right-0 z-10 mt-2 w-72 rounded-md bg-white text-center shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none"
+              >
+                <Calendar
+                  album={album}
+                  dateRange={dateRange}
+                  setDateRange={setDateRange}
+                />
+              </Popover.Panel>
+            </Transition>
+          </Popover>
+        )}
+      </div>
 
       <Transition.Root show={androidDialogOpen} as={Fragment}>
         <Dialog
