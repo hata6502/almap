@@ -59,7 +59,7 @@ export const readEXIF = async (blob: Blob) => {
 
 export const resize = async (blob: Blob) => {
   const imageBitmap = await createImageBitmap(blob);
-  const resizeRatio = 1024 / Math.max(imageBitmap.width, imageBitmap.height);
+  const resizeRatio = 1080 / imageBitmap.width;
 
   const canvasElement = document.createElement("canvas");
   canvasElement.width = imageBitmap.width * resizeRatio;
