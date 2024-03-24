@@ -41,18 +41,16 @@ export const App: FunctionComponent<{
 
   const [dateOfMonth, setDateOfMonth] = useState(new Date());
   const [dateRange, setDateRange] = useState<[Date, Date]>(() => {
-    if (!album.length) {
-      return [new Date(-8640000000000000), new Date(8640000000000000)];
-    }
-
     const oneWeekAgo = new Date();
     oneWeekAgo.setDate(oneWeekAgo.getDate() - 6);
     oneWeekAgo.setHours(0, 0, 0, 0);
-
     const today = new Date();
     today.setHours(0, 0, 0, 0);
+    const oneWeek: [Date, Date] = [oneWeekAgo, today];
 
-    return [oneWeekAgo, today];
+    return filterAlbum({ album, dateRange: oneWeek }).length
+      ? oneWeek
+      : [new Date(-8640000000000000), new Date(8640000000000000)];
   });
 
   const [androidDialogOpen, setAndroidDialogOpen] = useState(
@@ -195,15 +193,10 @@ export const App: FunctionComponent<{
     inputElement.click();
   };
 
-  const filteredAlbum = useMemo(() => {
-    const [startDate, endDate] = dateRange;
-    return album.filter(
-      (photo) =>
-        new Date(photo.originalDate).setHours(0, 0, 0, 0) >=
-          startDate.getTime() &&
-        new Date(photo.originalDate).setHours(0, 0, 0, 0) <= endDate.getTime()
-    );
-  }, [album, dateRange]);
+  const filteredAlbum = useMemo(
+    () => filterAlbum({ album, dateRange }),
+    [album, dateRange]
+  );
   const albumFiltered = filteredAlbum.length !== album.length;
 
   return (
@@ -408,3 +401,17 @@ export const App: FunctionComponent<{
     </div>
   );
 };
+
+const filterAlbum = ({
+  album,
+  dateRange: [startDate, endDate],
+}: {
+  album: Photo[];
+  dateRange: [Date, Date];
+}) =>
+  album.filter(
+    (photo) =>
+      new Date(photo.originalDate).setHours(0, 0, 0, 0) >=
+        startDate.getTime() &&
+      new Date(photo.originalDate).setHours(0, 0, 0, 0) <= endDate.getTime()
+  );
