@@ -321,10 +321,10 @@ export const App: FunctionComponent<{
 
                   <div className="mt-5 sm:mt-6">
                     <a
-                      href="https://twitter.com/hata6502/status/1770083490509500608"
+                      href="https://forms.gle/JuWRh2adTiDQpKAW6"
                       className="inline-flex w-full justify-center rounded-md bg-pink-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-pink-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-pink-600"
                     >
-                      Google Play Storeを開く
+                      クローズドテストに参加する
                     </a>
                   </div>
                 </Dialog.Panel>
