@@ -1,3 +1,7 @@
+import { Photo } from "./database";
+import { NativeMessage, WebMessage } from "./native";
+import { boundaries, drawTile, tileSize } from "./tile";
+
 import { Dialog, Transition } from "@headlessui/react";
 import { XMarkIcon } from "@heroicons/react/24/outline";
 import L from "leaflet";
@@ -9,8 +13,6 @@ import {
   useRef,
   useState,
 } from "react";
-import { Photo } from "./database";
-import { boundaries, drawTile, tileSize } from "./tile";
 
 export const Almap: FunctionComponent<{
   album: Photo[];
@@ -25,7 +27,7 @@ export const Almap: FunctionComponent<{
     return { promise, resolve };
   });
 
-  const [memory, setMemory] = useState<(Photo & { url: string })[]>([]);
+  const [memory, setMemory] = useState<Photo[]>([]);
   const [openMemory, setOpenMemory] = useState(false);
 
   const albumRef = useRef(album);
@@ -33,7 +35,15 @@ export const Almap: FunctionComponent<{
   const map = useRef<L.Map>();
   const id = useId();
 
-  const handleCloseMemory = () => setOpenMemory(false);
+  const handleCloseMemory = () => {
+    setOpenMemory(false);
+
+    if ("ReactNativeWebView" in window) {
+      const message: NativeMessage = { type: "memoryClosed" };
+      // @ts-expect-error
+      ReactNativeWebView.postMessage(JSON.stringify(message));
+    }
+  };
 
   useEffect(() => {
     let isMoving = false;
@@ -82,13 +92,7 @@ export const Almap: FunctionComponent<{
               return;
             }
 
-            setMemory(
-              // @ts-expect-error
-              boundaryAlbum.map((photo) => ({
-                ...photo,
-                url: URL.createObjectURL(photo.blob),
-              }))
-            );
+            setMemory(boundaryAlbum);
             setOpenMemory(true);
           });
 
@@ -215,11 +219,7 @@ export const Almap: FunctionComponent<{
                           <h3>{photo.originalDate.toLocaleString()}</h3>
 
                           <div className="mt-1">
-                            <img
-                              alt={photo.name}
-                              src={photo.url}
-                              className="w-full rounded-lg"
-                            />
+                            <Photo photo={photo} />
                           </div>
                         </div>
                       ))}
@@ -233,4 +233,68 @@ export const Almap: FunctionComponent<{
       </Transition.Root>
     </>
   );
+};
+
+const Photo: FunctionComponent<{ photo: Photo }> = ({ photo }) => {
+  const [url, setURL] = useState(URL.createObjectURL(photo.blob));
+
+  useEffect(() => {
+    const abortController = new AbortController();
+    (async () => {
+      await new Promise((resolve) => setTimeout(resolve));
+      if (abortController.signal.aborted) {
+        return;
+      }
+
+      switch (photo.source) {
+        case "native": {
+          // @ts-expect-error
+          const handleAlmapWebMessage = async (event) => {
+            const message: WebMessage = event.detail;
+            switch (message.type) {
+              case "loadPhoto": {
+                if (message.id !== photo.name) {
+                  break;
+                }
+
+                removeEventListener("almapwebmessage", handleAlmapWebMessage);
+
+                const response = await fetch(message.dataURL);
+                setURL(URL.createObjectURL(await response.blob()));
+                break;
+              }
+
+              case "importPhoto":
+              case "progress": {
+                break;
+              }
+
+              default: {
+                throw new Error(`Unknown message: ${message satisfies never}`);
+              }
+            }
+          };
+          addEventListener("almapwebmessage", handleAlmapWebMessage);
+
+          const message: NativeMessage = { type: "loadPhoto", id: photo.name };
+          // @ts-expect-error
+          ReactNativeWebView.postMessage(JSON.stringify(message));
+          break;
+        }
+
+        case undefined: {
+          break;
+        }
+
+        default: {
+          throw new Error(`Unknown source: ${photo.source satisfies never}`);
+        }
+      }
+    })();
+    return () => {
+      abortController.abort();
+    };
+  }, [photo.blob, photo.name, photo.source]);
+
+  return <img alt="" src={url} className="w-full rounded-lg" />;
 };

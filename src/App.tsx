@@ -2,6 +2,7 @@ import { Almap } from "./Almap";
 import { Calendar } from "./Calendar";
 import { Photo, getAlbum, putPhoto } from "./database";
 import { readEXIF, resize } from "./import";
+import { WebMessage } from "./native";
 
 import { Dialog, Popover, Transition } from "@headlessui/react";
 import { CalendarDaysIcon, PhotoIcon } from "@heroicons/react/20/solid";
@@ -13,22 +14,6 @@ import {
   useState,
   useTransition,
 } from "react";
-
-type WebMessage =
-  | {
-      type: "importPhoto";
-      id: string;
-      dataURL: string;
-      location: {
-        latitude: number;
-        longitude: number;
-      };
-      creationTime: number;
-    }
-  | {
-      type: "progress";
-      progress?: number;
-    };
 
 export const App: FunctionComponent<{
   defaultAlbum: Photo[];
@@ -79,6 +64,7 @@ export const App: FunctionComponent<{
               const response = await fetch(message.dataURL);
               await putPhoto({
                 name: message.id,
+                source: "native",
                 blob: await response.blob(),
                 latitude: message.location.latitude,
                 longitude: message.location.longitude,
@@ -109,6 +95,10 @@ export const App: FunctionComponent<{
             window.clearInterval(intervalID);
             await drawImportedPhotos();
           }
+          break;
+        }
+
+        case "loadPhoto": {
           break;
         }
 

@@ -1,5 +1,6 @@
 export interface Photo {
   name: string;
+  source?: "native";
   blob: Blob;
   latitude: number;
   longitude: number;

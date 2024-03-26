@@ -2,11 +2,7 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
 import { getAlbum } from "./database";
-
-type NativeMessage = {
-  type: "start";
-  after?: number;
-};
+import { NativeMessage } from "./native";
 
 if ("serviceWorker" in navigator) {
   await navigator.serviceWorker.register("serviceWorker.js", {
