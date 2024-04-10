@@ -5,7 +5,25 @@ export interface Photo {
   latitude: number;
   longitude: number;
   originalDate: Date;
+  url?: string;
 }
+
+const almapScrapboxURL =
+  "https://scrapbox.io/hata6502/almap_-_%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0%E3%81%A8%E5%9C%B0%E5%9B%B3";
+const almapIconResponse = await fetch("readme.png");
+if (!almapIconResponse.ok) {
+  throw new Error("Failed to fetch favicon.png");
+}
+const readme: Photo = {
+  name: almapScrapboxURL,
+  blob: await almapIconResponse.blob(),
+  // 日本経緯度原点
+  latitude: 35.39291572,
+  longitude: 139.44288869,
+  // almapの発表日
+  originalDate: new Date("2024-01-26T15:00:00.000Z"),
+  url: almapScrapboxURL,
+};
 
 export const getAlbum = () =>
   new Promise<Photo[]>((resolve, reject) => {
@@ -14,7 +32,7 @@ export const getAlbum = () =>
       .objectStore("album")
       .getAll();
     albumGetAllRequest.onsuccess = () => {
-      resolve(albumGetAllRequest.result);
+      resolve([...albumGetAllRequest.result, readme]);
     };
     albumGetAllRequest.onerror = () => {
       reject(albumGetAllRequest.error);

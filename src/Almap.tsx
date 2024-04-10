@@ -92,8 +92,12 @@ export const Almap: FunctionComponent<{
               return;
             }
 
-            setMemory(boundaryAlbum);
-            setOpenMemory(true);
+            if (boundaryAlbum.length === 1 && boundaryAlbum[0].url) {
+              open(boundaryAlbum[0].url);
+            } else {
+              setMemory(boundaryAlbum);
+              setOpenMemory(true);
+            }
           });
 
           done(undefined, canvasElement);
@@ -296,5 +300,14 @@ const Photo: FunctionComponent<{ photo: Photo }> = ({ photo }) => {
     };
   }, [photo.blob, photo.name, photo.source]);
 
-  return <img alt="" src={url} className="w-full rounded-lg" />;
+  const image = <img alt="" src={url} className="w-full rounded-lg" />;
+  return photo.url ? (
+    <div className="border-b border-pink-500 hover:border-pink-700">
+      <a href={photo.url} target="_blank">
+        {image}
+      </a>
+    </div>
+  ) : (
+    image
+  );
 };
