@@ -1,12 +1,17 @@
-export interface Photo {
+export type Photo = {
   name: string;
-  source?: "native";
   blob: Blob;
   latitude: number;
   longitude: number;
   originalDate: Date;
   url?: string;
-}
+} & (
+    | { source?: undefined }
+    | {
+      source: "native";
+      originalBlob?: Blob;
+  }
+  );
 
 const almapScrapboxURL =
   "https://scrapbox.io/hata6502/almap_-_%E3%82%A2%E3%83%AB%E3%83%90%E3%83%A0%E3%81%A8%E5%9C%B0%E5%9B%B3";

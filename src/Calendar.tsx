@@ -177,8 +177,8 @@ const getBackground = (heat: Photo[]) => {
       // 経度1度あたりの距離
       longitude / 0.010966404715491394
     ) /
-      // マラソンの距離
-      42.195) %
+      // ハーフマラソンの距離
+      21.0975) %
       1);
 
   const lightness = 100 - 7.5 * Math.min(heat.length / 15, 1);

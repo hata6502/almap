@@ -9,6 +9,7 @@ import { CalendarDaysIcon, PhotoIcon } from "@heroicons/react/20/solid";
 import {
   Fragment,
   FunctionComponent,
+  useCallback,
   useEffect,
   useMemo,
   useState,
@@ -43,9 +44,9 @@ export const App: FunctionComponent<{
   );
   const [exifDialogOpen, setEXIFDialogOpen] = useState(false);
 
-  const updateAlbum = async () => {
+  const updateAlbum = useCallback(async () => {
     setAlbum(await getAlbum());
-  };
+  }, []);
 
   useEffect(() => {
     if (!("ReactNativeWebView" in window)) {
@@ -112,7 +113,7 @@ export const App: FunctionComponent<{
     return () => {
       removeEventListener("almapwebmessage", handleAlmapWebMessage);
     };
-  }, []);
+  }, [updateAlbum]);
 
   const handleImportButtonClick = () => {
     setProgress(0);
@@ -191,7 +192,11 @@ export const App: FunctionComponent<{
 
   return (
     <div className="relative h-full">
-      <Almap album={filteredAlbum} albumFiltered={albumFiltered} />
+      <Almap
+        album={filteredAlbum}
+        albumFiltered={albumFiltered}
+        updateAlbum={updateAlbum}
+      />
 
       <div className="absolute right-2.5 top-2.5 z-1000 flex gap-2 print:hidden">
         {!("ReactNativeWebView" in window) && (

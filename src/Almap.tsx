@@ -1,4 +1,4 @@
-import { Photo } from "./database";
+import { Photo, putPhoto } from "./database";
 import { NativeMessage, WebMessage } from "./native";
 import { boundaries, drawTile, tileSize } from "./tile";
 
@@ -10,6 +10,7 @@ import {
   FunctionComponent,
   useEffect,
   useId,
+  useMemo,
   useRef,
   useState,
 } from "react";
@@ -17,7 +18,8 @@ import {
 export const Almap: FunctionComponent<{
   album: Photo[];
   albumFiltered: boolean;
-}> = ({ album, albumFiltered }) => {
+  updateAlbum: () => Promise<void>;
+}> = ({ album, albumFiltered, updateAlbum }) => {
   const [ready] = useState(() => {
     let resolve: () => void;
     const promise = new Promise<void>((res) => {
@@ -27,7 +29,7 @@ export const Almap: FunctionComponent<{
     return { promise, resolve };
   });
 
-  const [memory, setMemory] = useState<Photo[]>([]);
+  const [memory, setMemory] = useState<string[]>([]);
   const [openMemory, setOpenMemory] = useState(false);
 
   const albumRef = useRef(album);
@@ -95,7 +97,8 @@ export const Almap: FunctionComponent<{
             if (boundaryAlbum.length === 1 && boundaryAlbum[0].url) {
               open(boundaryAlbum[0].url);
             } else {
-              setMemory(boundaryAlbum);
+              // @ts-expect-error
+              setMemory(boundaryAlbum.map(({ name }) => name));
               setOpenMemory(true);
             }
           });
@@ -173,6 +176,11 @@ export const Almap: FunctionComponent<{
     ready.resolve();
   }, [album, albumFiltered]);
 
+  const memoryAlbum = useMemo(
+    () => album.filter((photo) => memory.includes(photo.name)),
+    [album, memory]
+  );
+
   return (
     <>
       <div id={id} className="h-full" />
@@ -218,12 +226,12 @@ export const Almap: FunctionComponent<{
                     </button>
 
                     <div className="flex flex-col space-y-4">
-                      {memory.map((photo) => (
+                      {memoryAlbum.map((photo) => (
                         <div key={photo.name}>
                           <h3>{photo.originalDate.toLocaleString()}</h3>
 
                           <div className="mt-1">
-                            <Photo photo={photo} />
+                            <Photo photo={photo} updateAlbum={updateAlbum} />
                           </div>
                         </div>
                       ))}
@@ -239,19 +247,26 @@ export const Almap: FunctionComponent<{
   );
 };
 
-const Photo: FunctionComponent<{ photo: Photo }> = ({ photo }) => {
-  const [url, setURL] = useState(URL.createObjectURL(photo.blob));
+const Photo: FunctionComponent<{
+  photo: Photo;
+  updateAlbum: () => Promise<void>;
+}> = ({ photo, updateAlbum }) => {
+  const [url, setURL] = useState<string>();
 
   useEffect(() => {
     const abortController = new AbortController();
-    (async () => {
-      await new Promise((resolve) => setTimeout(resolve));
-      if (abortController.signal.aborted) {
-        return;
-      }
+    const photoSource = photo.source;
+    let blob;
+    switch (photoSource) {
+      case "native": {
+        blob = photo.originalBlob ?? photo.blob;
 
-      switch (photo.source) {
-        case "native": {
+        (async () => {
+          await new Promise((resolve) => setTimeout(resolve));
+          if (photo.originalBlob || abortController.signal.aborted) {
+            return;
+          }
+
           // @ts-expect-error
           const handleAlmapWebMessage = async (event) => {
             const message: WebMessage = event.detail;
@@ -264,7 +279,11 @@ const Photo: FunctionComponent<{ photo: Photo }> = ({ photo }) => {
                 removeEventListener("almapwebmessage", handleAlmapWebMessage);
 
                 const response = await fetch(message.dataURL);
-                setURL(URL.createObjectURL(await response.blob()));
+                await putPhoto({
+                  ...photo,
+                  originalBlob: await response.blob(),
+                });
+                await updateAlbum();
                 break;
               }
 
@@ -283,22 +302,29 @@ const Photo: FunctionComponent<{ photo: Photo }> = ({ photo }) => {
           const message: NativeMessage = { type: "loadPhoto", id: photo.name };
           // @ts-expect-error
           ReactNativeWebView.postMessage(JSON.stringify(message));
-          break;
-        }
+        })();
 
-        case undefined: {
-          break;
-        }
-
-        default: {
-          throw new Error(`Unknown source: ${photo.source satisfies never}`);
-        }
+        break;
       }
-    })();
+
+      case undefined: {
+        blob = photo.blob;
+        break;
+      }
+
+      default: {
+        throw new Error(`Unknown source: ${photoSource satisfies never}`);
+      }
+    }
+
+    const url = URL.createObjectURL(blob);
+    setURL(url);
+
     return () => {
       abortController.abort();
+      URL.revokeObjectURL(url);
     };
-  }, [photo.blob, photo.name, photo.source]);
+  }, [photo, updateAlbum]);
 
   const image = <img alt="" src={url} className="w-full rounded-lg" />;
   return photo.url ? (
