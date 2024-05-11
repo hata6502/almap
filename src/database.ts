@@ -25,7 +25,7 @@ const readme: Photo = {
   // 日本経緯度原点
   latitude: 35.39291572,
   longitude: 139.44288869,
-  originalDate: new Date(-8640000000000000),
+  originalDate: new Date(-8639999999999999),
   url: almapScrapboxURL,
 };
 
