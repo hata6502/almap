@@ -55,14 +55,16 @@ export const Memory: FunctionComponent<{
             >
               <Dialog.Panel className="flex w-full max-w-xl transform text-left text-base transition md:my-8 md:px-4">
                 <div className="relative w-full bg-white px-4 pb-8 pt-14 shadow-2xl sm:px-6 sm:pt-8 md:p-6 lg:p-8">
-                  <button
-                    type="button"
-                    className="absolute right-4 top-4 text-gray-400 hover:text-gray-500 sm:right-6 sm:top-8 md:right-6 md:top-6 lg:right-8 lg:top-8"
-                    onClick={handleCloseMemory}
-                  >
-                    <span className="sr-only">閉じる</span>
-                    <XMarkIcon className="h-6 w-6" aria-hidden="true" />
-                  </button>
+                  <div className="sticky top-0">
+                    <button
+                      type="button"
+                      className="absolute right-0 text-gray-400 hover:text-gray-500"
+                      onClick={handleCloseMemory}
+                    >
+                      <span className="sr-only">閉じる</span>
+                      <XMarkIcon className="h-6 w-6" aria-hidden="true" />
+                    </button>
+                  </div>
 
                   <div className="flex flex-col space-y-4">
                     {album.map((photo) => (
