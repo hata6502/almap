@@ -25,8 +25,7 @@ const readme: Photo = {
   // 日本経緯度原点
   latitude: 35.39291572,
   longitude: 139.44288869,
-  // almapの発表日
-  originalDate: new Date("2024-01-26T15:00:00.000Z"),
+  originalDate: new Date(-8640000000000000),
   url: almapScrapboxURL,
 };
 
