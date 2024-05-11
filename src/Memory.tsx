@@ -69,7 +69,7 @@ export const Memory: FunctionComponent<{
                   <div className="flex flex-col space-y-4">
                     {album.map((photo) => (
                       <div key={photo.name}>
-                        <h3>{photo.originalDate.toLocaleString()}</h3>
+                        {photo.originalDate.getTime()!==0 && <h3>{photo.originalDate.toLocaleString()}</h3>}
 
                         <div className="mt-1">
                           <Photo photo={photo} />
