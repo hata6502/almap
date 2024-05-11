@@ -8,8 +8,22 @@
       http-equiv="Content-Security-Policy"
       content="
         default-src 'self';
-        connect-src 'self' data: https://tile.openstreetmap.jp;
-        img-src 'self' blob: data:;
+        connect-src
+          'self'
+          data:
+          https://*.analytics.google.com
+          https://*.google-analytics.com
+          https://*.googletagmanager.com
+          https://tile.openstreetmap.jp
+        ;
+        img-src
+          'self'
+          blob:
+          data:
+          https://*.google-analytics.com
+          https://*.googletagmanager.com
+        ;
+        script-src 'self' https://*.googletagmanager.com;
         style-src 'self' https://unpkg.com;
       "
     />
@@ -38,6 +52,10 @@
   </head>
 
   <body class="h-full">
+    <script
+      async
+      src="https://www.googletagmanager.com/gtag/js?id=G-1L4JVE9K6Q"
+    ></script>
     <script type="module" src="index.js"></script>
   </body>
 </html>

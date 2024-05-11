@@ -10,6 +10,15 @@ if ("serviceWorker" in navigator) {
   });
 }
 
+// @ts-expect-error
+window.dataLayer = window.dataLayer || [];
+function gtag(..._args: any[]) {
+  // @ts-expect-error
+  dataLayer.push(arguments);
+}
+gtag("js", new Date());
+gtag("config", "G-1L4JVE9K6Q");
+
 const album = await getAlbum();
 if ("ReactNativeWebView" in window) {
   const message: NativeMessage = {
