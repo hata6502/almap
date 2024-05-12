@@ -1,7 +1,7 @@
 export type NativeMessage =
   | { type: "loadPhoto"; id: string }
   | { type: "memoryClosed" }
-  | { type: "start"; after?: number };
+  | { type: "start"; after: number };
 
 export type WebMessage =
   | {

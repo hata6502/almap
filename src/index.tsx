@@ -21,12 +21,16 @@ gtag("config", "G-1L4JVE9K6Q");
 
 const album = await getAlbum();
 if ("ReactNativeWebView" in window) {
+  const initialDate = new Date();
+  initialDate.setMonth(initialDate.getMonth() - 3);
+  const afterDate =
+    album
+      .toSorted((a, b) => b.originalDate.getTime() - a.originalDate.getTime())
+      .at(0)?.originalDate ?? initialDate;
+
   const message: NativeMessage = {
     type: "start",
-    after: album
-      .toSorted((a, b) => b.originalDate.getTime() - a.originalDate.getTime())
-      .at(0)
-      ?.originalDate.getTime(),
+    after: afterDate.getTime(),
   };
   // @ts-expect-error
   ReactNativeWebView.postMessage(JSON.stringify(message));

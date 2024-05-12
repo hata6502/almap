@@ -2,6 +2,7 @@ import { Photo } from "./database";
 
 import { ChevronLeftIcon, ChevronRightIcon } from "@heroicons/react/20/solid";
 import clsx from "clsx";
+import L from "leaflet";
 import { Dispatch, FunctionComponent, SetStateAction } from "react";
 
 export const Calendar: FunctionComponent<{
@@ -96,10 +97,7 @@ export const Calendar: FunctionComponent<{
         {days.map((day, dayIndex) => {
           const currentMonth = day.getMonth() === dateOfMonth.getMonth();
           const selected =
-            day.getTime() >= start.getTime() &&
-            day.getTime() <= end.getTime() &&
-            (start.getTime() !== -8640000000000000 ||
-              end.getTime() !== 8640000000000000);
+            day.getTime() >= start.getTime() && day.getTime() <= end.getTime();
           const edge = [start.getTime(), end.getTime()].includes(day.getTime());
           const today = day.getTime() === new Date().setHours(0, 0, 0, 0);
 
@@ -137,7 +135,7 @@ export const Calendar: FunctionComponent<{
                 dayIndex === days.length - 7 && "rounded-bl-md",
                 dayIndex === days.length - 1 && "rounded-br-md",
                 currentMonth ? "text-gray-900" : "text-gray-400",
-                today ? "font-bold" : selected && "font-semibold"
+                today && "font-bold"
               )}
               style={{ background }}
               onClick={handleClick}
@@ -146,8 +144,8 @@ export const Calendar: FunctionComponent<{
                 dateTime={day.toISOString()}
                 className={clsx(
                   "mx-auto flex h-7 w-7 items-center justify-center rounded-full",
-                  selected && "bg-gray-200",
-                  edge && "bg-pink-200"
+                  selected && "bg-gray-100",
+                  edge && "bg-pink-100"
                 )}
               >
                 {day.getDate()}
@@ -161,24 +159,18 @@ export const Calendar: FunctionComponent<{
 };
 
 const getBackground = (heat: Photo[]) => {
-  const latitude =
-    heat.reduce((sum, photo) => sum + photo.latitude, 0) / heat.length -
-    // 日本経緯度原点
-    35.39291572;
-  const longitude =
-    heat.reduce((sum, photo) => sum + photo.longitude, 0) / heat.length -
-    // 日本経緯度原点
-    139.44288869;
-  const hue =
-    360 *
-    ((Math.hypot(
-      // 緯度1度あたりの距離
-      latitude / 0.0090133729745762,
-      // 経度1度あたりの距離
-      longitude / 0.010966404715491394
-    ) /
-      10) %
-      1);
+  if (!heat.length) {
+    return "#ffffff";
+  }
+
+  const average = L.latLng(
+    heat.reduce((sum, photo) => sum + photo.latitude, 0) / heat.length,
+    heat.reduce((sum, photo) => sum + photo.longitude, 0) / heat.length
+  );
+  // 日本経緯度原点
+  const distance = average.distanceTo(L.latLng(35.39291572, 139.44288869));
+  // マラソンの距離
+  const hue = 360 * ((distance / 42195) % 1);
 
   const lightness = 100 - 7.5 * Math.min(heat.length / 15, 1);
   return `hsl(${hue} 75% ${lightness}%)`;
