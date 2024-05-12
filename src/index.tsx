@@ -23,14 +23,13 @@ const album = await getAlbum();
 if ("ReactNativeWebView" in window) {
   const initialDate = new Date();
   initialDate.setMonth(initialDate.getMonth() - 3);
-  const afterDate =
-    album
-      .toSorted((a, b) => b.originalDate.getTime() - a.originalDate.getTime())
-      .at(0)?.originalDate ?? initialDate;
-
   const message: NativeMessage = {
     type: "start",
-    after: afterDate.getTime(),
+    after:
+      album
+        .toSorted((a, b) => b.originalDate.getTime() - a.originalDate.getTime())
+        .at(0)
+        ?.originalDate.getTime() || initialDate.getTime(),
   };
   // @ts-expect-error
   ReactNativeWebView.postMessage(JSON.stringify(message));
