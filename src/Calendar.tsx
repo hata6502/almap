@@ -145,7 +145,7 @@ export const Calendar: FunctionComponent<{
                 className={clsx(
                   "mx-auto flex h-7 w-7 items-center justify-center rounded-full",
                   selected && "bg-gray-100",
-                  edge && "bg-pink-100"
+                  edge && "bg-pink-200"
                 )}
               >
                 {day.getDate()}

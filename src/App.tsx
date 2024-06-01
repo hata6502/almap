@@ -192,7 +192,11 @@ export const App: FunctionComponent<{
 
   return (
     <div className="relative h-full">
-      <Almap album={filteredAlbum} albumFiltered={albumFiltered} />
+      <Almap
+        album={filteredAlbum}
+        albumFiltered={albumFiltered}
+        updateAlbum={updateAlbum}
+      />
 
       <div className="absolute right-2.5 top-2.5 z-1000 flex gap-2 print:hidden">
         {!("ReactNativeWebView" in window) && (

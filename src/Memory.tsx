@@ -16,8 +16,9 @@ export const Memory: FunctionComponent<{
   album: Photo[];
   open: boolean;
   setOpen: Dispatch<SetStateAction<boolean>>;
-}> = ({ album, open, setOpen }) => {
-  const handleCloseMemory = () => {
+  updateAlbum: () => Promise<void>;
+}> = ({ album, open, setOpen, updateAlbum }) => {
+  const handleCloseMemory = async () => {
     setOpen(false);
 
     if ("ReactNativeWebView" in window) {
@@ -25,6 +26,8 @@ export const Memory: FunctionComponent<{
       // @ts-expect-error
       ReactNativeWebView.postMessage(JSON.stringify(message));
     }
+
+    await updateAlbum();
   };
 
   return (
@@ -58,7 +61,7 @@ export const Memory: FunctionComponent<{
                   <div className="sticky top-0">
                     <button
                       type="button"
-                      className="absolute right-0 text-gray-400 hover:text-gray-500"
+                      className="absolute right-0 bg-white text-gray-400 hover:text-gray-500"
                       onClick={handleCloseMemory}
                     >
                       <span className="sr-only">閉じる</span>
@@ -69,7 +72,9 @@ export const Memory: FunctionComponent<{
                   <div className="flex flex-col space-y-4">
                     {album.map((photo) => (
                       <div key={photo.name}>
-                        {photo.originalDate.getTime()!==0 && <h3>{photo.originalDate.toLocaleString()}</h3>}
+                        {photo.originalDate.getTime() !== 0 && (
+                          <h3>{photo.originalDate.toLocaleString()}</h3>
+                        )}
 
                         <div className="mt-1">
                           <Photo photo={photo} />

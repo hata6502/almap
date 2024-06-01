@@ -8,7 +8,8 @@ import { FunctionComponent, useEffect, useId, useRef, useState } from "react";
 export const Almap: FunctionComponent<{
   album: Photo[];
   albumFiltered: boolean;
-}> = ({ album, albumFiltered }) => {
+  updateAlbum: () => Promise<void>;
+}> = ({ album, albumFiltered, updateAlbum }) => {
   const [ready] = useState(() => {
     let resolve: () => void;
     const promise = new Promise<void>((res) => {
@@ -157,7 +158,12 @@ export const Almap: FunctionComponent<{
   return (
     <>
       <div id={id} className="h-full" />
-      <Memory album={memoryAlbum} open={openMemory} setOpen={setOpenMemory} />
+      <Memory
+        album={memoryAlbum}
+        open={openMemory}
+        setOpen={setOpenMemory}
+        updateAlbum={updateAlbum}
+      />
     </>
   );
 };
