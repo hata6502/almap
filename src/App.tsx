@@ -199,39 +199,37 @@ export const App: FunctionComponent<{
       />
 
       <div className="absolute right-2.5 top-2.5 z-1000 flex gap-2 print:hidden">
-        {!("ReactNativeWebView" in window) && (
-          <button
-            type="button"
-            disabled={processing}
-            className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
-            onClick={handleImportButtonClick}
-          >
-            {processing ? (
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                fill="none"
-                viewBox="0 0 24 24"
-                className="animate-spin h-5 w-5 text-pink-500"
-              >
-                <circle
-                  cx="12"
-                  cy="12"
-                  r="10"
-                  stroke="currentColor"
-                  strokeWidth="4"
-                  className="opacity-25"
-                ></circle>
-                <path
-                  fill="currentColor"
-                  d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-                  className="opacity-75"
-                ></path>
-              </svg>
-            ) : (
-              <PhotoIcon className="h-5 w-5" aria-hidden="true" />
-            )}
-          </button>
-        )}
+        <button
+          type="button"
+          disabled={processing}
+          className="rounded-full bg-white p-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 hover:bg-gray-50"
+          onClick={handleImportButtonClick}
+        >
+          {processing ? (
+            <svg
+              xmlns="http://www.w3.org/2000/svg"
+              fill="none"
+              viewBox="0 0 24 24"
+              className="animate-spin h-5 w-5 text-pink-500"
+            >
+              <circle
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+                className="opacity-25"
+              ></circle>
+              <path
+                fill="currentColor"
+                d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                className="opacity-75"
+              ></path>
+            </svg>
+          ) : (
+            <PhotoIcon className="h-5 w-5" aria-hidden="true" />
+          )}
+        </button>
 
         {Boolean(album.length) && (
           <Popover>
